@@ -1,89 +1,16 @@
 #include "MainWindow.h"
-#include "utils.h"
 #include "Singleton.h"
 #include "Input.h"
-
-HRESULT MainWindow::CreateGraphicsResources() {
-    HRESULT hr = S_OK;
-    if (pRenderTarget == NULL) {
-        RECT rc;
-        GetClientRect(m_hwnd, &rc);
-
-        D2D1_SIZE_U size = D2D1::SizeU(rc.right, rc.bottom);
-
-        hr = pFactory->CreateHwndRenderTarget(
-                D2D1::RenderTargetProperties(),
-                D2D1::HwndRenderTargetProperties(m_hwnd, size),
-                &pRenderTarget);
-
-        if (SUCCEEDED(hr)) {
-            hr = pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Red), &pBrush);
-        }
-    }
-    return hr;
-}
-
-void MainWindow::DiscardGraphicsResources() {
-    utils::SafeRelease(&pRenderTarget);
-    utils::SafeRelease(&pBrush);
-}
-
-void MainWindow::OnPaint() {
-    HRESULT hr = CreateGraphicsResources();
-    if (SUCCEEDED(hr)) {
-        PAINTSTRUCT ps;
-        BeginPaint(m_hwnd, &ps);
-
-        pRenderTarget->BeginDraw();
-
-        pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Black));
-
-        RECT rc;
-        GetClientRect(m_hwnd, &rc);
-
-        // Draw here
-
-        hr = pRenderTarget->EndDraw();
-        if (FAILED(hr) || hr == D2DERR_RECREATE_TARGET) {
-            DiscardGraphicsResources();
-        }
-
-        EndPaint(m_hwnd, &ps);
-
-        InvalidateRect(m_hwnd, NULL, FALSE);
-    }
-}
-
-void MainWindow::Resize() {
-    if (pRenderTarget != NULL) {
-        RECT rc;
-        GetClientRect(m_hwnd, &rc);
-
-        D2D1_SIZE_U size = D2D1::SizeU(rc.right, rc.bottom);
-
-        pRenderTarget->Resize(size);
-
-        InvalidateRect(m_hwnd, NULL, FALSE);
-    }
-}
+#include "DXApp.h"
 
 LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
             // Initialize resources here
-
-            if (FAILED(D2D1CreateFactory(
-                    D2D1_FACTORY_TYPE_SINGLE_THREADED, &pFactory))) {
-                return -1;  // Fail CreateWindowEx.
-            }
-
-            CreateGraphicsResources();
-
             return 0;
 
         case WM_DESTROY:
-            DiscardGraphicsResources();
-            utils::SafeRelease(&pFactory);
+            Singleton<DXApp>::getInstance().OnDestroy();
             PostQuitMessage(0);
             return 0;
 
@@ -96,11 +23,12 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
 
         case WM_PAINT:
-            OnPaint();
+            Singleton<DXApp>::getInstance().OnUpdate();
+            Singleton<DXApp>::getInstance().OnRender();
             return 0;
 
         case WM_SIZE:
-            Resize();
+            // todo: resize if needed
             return 0;
 
         case WM_SETCURSOR:
@@ -134,6 +62,8 @@ void MainWindow::HandleKeyDown(WPARAM key) const {
         case VK_SPACE:
             Singleton<Input>::getInstance().sendKeyDown(Key::SPACE);
             break;
+        case VK_ESCAPE:
+            CloseWindow();
     }
 }
 
@@ -157,6 +87,6 @@ void MainWindow::HandleKeyUp(WPARAM key) const {
     }
 }
 
-void MainWindow::CloseWindow() {
+void MainWindow::CloseWindow() const {
     PostMessage(m_hwnd, WM_CLOSE, 0, 0);
 }

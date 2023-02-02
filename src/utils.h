@@ -19,6 +19,7 @@ namespace utils {
         return dist{min, max}(gen);
     }
 
+    // todo: remove if unused
     template<typename Interface>
     inline void SafeRelease(Interface **ppInterfaceToRelease) {
         if (*ppInterfaceToRelease != nullptr) {

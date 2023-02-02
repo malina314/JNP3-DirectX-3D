@@ -13,7 +13,7 @@ int WINAPI wWinMain(_In_ [[maybe_unused]] HINSTANCE instance,
         return -1;
     }
 
-    ShowWindow(mainWindow.Window(), nCmdShow);
+    ShowWindow(mainWindow.getHwnd(), nCmdShow);
 
     // todo: uncomment this line
     // mainWindow.SwitchToFullscreen();

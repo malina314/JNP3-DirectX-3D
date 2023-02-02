@@ -32,7 +32,7 @@ set(SOURCE_FILES
         src/constants.h src/utils.h src/Input.h src/Singleton.h
         src/windows_h.h
         src/BaseWindow.h src/MainWindow.h src/MainWindow.cpp
-        src/main.cpp)
+        src/main.cpp src/DXApp.cpp src/DXApp.h)
 
 # Shaders compilation (.hlsl)
 add_custom_target(

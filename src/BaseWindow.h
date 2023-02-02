@@ -43,7 +43,7 @@ public:
 
         wc.lpfnWndProc = DERIVED_TYPE::WindowProc;
         wc.hInstance = GetModuleHandle(NULL);
-        wc.lpszClassName = ClassName();
+        wc.lpszClassName = TEXT("Window");
 
         // hide cursor
         wc.hCursor = NULL;
@@ -51,7 +51,7 @@ public:
         RegisterClass(&wc);
 
         m_hwnd = CreateWindowEx(
-                dwExStyle, ClassName(), lpWindowName, dwStyle, x, y,
+                dwExStyle, wc.lpszClassName, lpWindowName, dwStyle, x, y,
                 nWidth, nHeight, hWndParent, hMenu, GetModuleHandle(NULL), this
         );
 
@@ -83,12 +83,9 @@ public:
         }
     }
 
-    HWND Window() const { return m_hwnd; }
+    HWND getHwnd() const { return m_hwnd; }
 
 protected:
-
-    virtual PCWSTR ClassName() const = 0;
-
     virtual LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
 
     HWND m_hwnd;
