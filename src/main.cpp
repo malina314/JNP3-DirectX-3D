@@ -1,4 +1,4 @@
-#include "windows_h.h"
+#include "include_helper.h"
 #include "MainWindow.h"
 #include "Singleton.h"
 #include "constants.h"

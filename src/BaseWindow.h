@@ -2,7 +2,7 @@
 #define DIRECTX_3D_FINAL_PROJECT_BASEWINDOW_H
 
 
-#include "windows_h.h"
+#include "include_helper.h"
 
 template<class DERIVED_TYPE>
 class BaseWindow {

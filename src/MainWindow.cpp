@@ -7,6 +7,7 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
             // Initialize resources here
+            Singleton<DXApp>::getInstance().OnInit();
             return 0;
 
         case WM_DESTROY:
@@ -27,23 +28,12 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
             Singleton<DXApp>::getInstance().OnRender();
             return 0;
 
-        case WM_SIZE:
-            // todo: resize if needed
-            return 0;
-
         case WM_SETCURSOR:
             SetCursor(NULL);
             return 0;
     }
     return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
 }
-
-// todo: maybe this will be useful
-//Vec2 MainWindow::GetWindowSize() const {
-//    RECT rc;
-//    GetClientRect(m_hwnd, &rc);
-//    return Vec2(rc.right, rc.bottom);
-//}
 
 void MainWindow::HandleKeyDown(WPARAM key) const {
     switch (key) {

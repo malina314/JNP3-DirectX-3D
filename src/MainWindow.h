@@ -3,7 +3,7 @@
 
 
 #include "BaseWindow.h"
-#include "windows_h.h"
+#include "include_helper.h"
 
 class MainWindow : public BaseWindow<MainWindow> {
     void HandleKeyDown(WPARAM key) const;
@@ -12,9 +12,6 @@ class MainWindow : public BaseWindow<MainWindow> {
 
 public:
     LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
-
-//    todo: maybe this will be useful
-//    Vec2 GetWindowSize() const;
 
     void CloseWindow() const;
 };
