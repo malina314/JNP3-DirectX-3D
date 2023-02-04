@@ -38,19 +38,28 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 void MainWindow::HandleKeyDown(WPARAM key) const {
     switch (key) {
         case VK_UP:
-            Singleton<Input>::getInstance().sendKeyDown(Key::UP);
+            Singleton<Input>::getInstance().sendKeyDown(Key::ROT_UP);
             break;
         case VK_DOWN:
-            Singleton<Input>::getInstance().sendKeyDown(Key::DOWN);
+            Singleton<Input>::getInstance().sendKeyDown(Key::ROT_DOWN);
             break;
         case VK_LEFT:
-            Singleton<Input>::getInstance().sendKeyDown(Key::LEFT);
+            Singleton<Input>::getInstance().sendKeyDown(Key::ROT_LEFT);
             break;
         case VK_RIGHT:
-            Singleton<Input>::getInstance().sendKeyDown(Key::RIGHT);
+            Singleton<Input>::getInstance().sendKeyDown(Key::ROT_RIGHT);
             break;
-        case VK_SPACE:
-            Singleton<Input>::getInstance().sendKeyDown(Key::SPACE);
+        case 'W':
+            Singleton<Input>::getInstance().sendKeyDown(Key::MOV_UP);
+            break;
+        case 'S':
+            Singleton<Input>::getInstance().sendKeyDown(Key::MOV_DOWN);
+            break;
+        case 'A':
+            Singleton<Input>::getInstance().sendKeyDown(Key::MOV_LEFT);
+            break;
+        case 'D':
+            Singleton<Input>::getInstance().sendKeyDown(Key::MOV_RIGHT);
             break;
         case VK_ESCAPE:
             CloseWindow();
@@ -60,19 +69,28 @@ void MainWindow::HandleKeyDown(WPARAM key) const {
 void MainWindow::HandleKeyUp(WPARAM key) const {
     switch (key) {
         case VK_UP:
-            Singleton<Input>::getInstance().sendKeyUp(Key::UP);
+            Singleton<Input>::getInstance().sendKeyUp(Key::ROT_UP);
             break;
         case VK_DOWN:
-            Singleton<Input>::getInstance().sendKeyUp(Key::DOWN);
+            Singleton<Input>::getInstance().sendKeyUp(Key::ROT_DOWN);
             break;
         case VK_LEFT:
-            Singleton<Input>::getInstance().sendKeyUp(Key::LEFT);
+            Singleton<Input>::getInstance().sendKeyUp(Key::ROT_LEFT);
             break;
         case VK_RIGHT:
-            Singleton<Input>::getInstance().sendKeyUp(Key::RIGHT);
+            Singleton<Input>::getInstance().sendKeyUp(Key::ROT_RIGHT);
             break;
-        case VK_SPACE:
-            Singleton<Input>::getInstance().sendKeyUp(Key::SPACE);
+        case 'W':
+            Singleton<Input>::getInstance().sendKeyUp(Key::MOV_UP);
+            break;
+        case 'S':
+            Singleton<Input>::getInstance().sendKeyUp(Key::MOV_DOWN);
+            break;
+        case 'A':
+            Singleton<Input>::getInstance().sendKeyUp(Key::MOV_LEFT);
+            break;
+        case 'D':
+            Singleton<Input>::getInstance().sendKeyUp(Key::MOV_RIGHT);
             break;
     }
 }

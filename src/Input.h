@@ -5,11 +5,14 @@
 #include <cstring>
 
 enum class Key {
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT,
-    SPACE,
+    MOV_UP,
+    MOV_DOWN,
+    MOV_LEFT,
+    MOV_RIGHT,
+    ROT_UP,
+    ROT_DOWN,
+    ROT_LEFT,
+    ROT_RIGHT,
     Count // special value used for declaring arrays
 };
 
