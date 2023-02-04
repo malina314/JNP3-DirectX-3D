@@ -5,15 +5,17 @@
 using Microsoft::WRL::ComPtr;
 
 DXBaseApp::DXBaseApp() :
+        m_aspectRatio(16.0f / 9.0f),
         m_useWarpDevice(false) {
     WCHAR assetsPath[512];
     utils::GetAssetsPath(assetsPath, _countof(assetsPath));
     m_assetsPath = assetsPath;
 }
 
+// todo: fix this paths XD
 // Helper function for resolving the full path of assets.
 std::wstring DXBaseApp::GetAssetFullPath(LPCWSTR assetName) {
-    return m_assetsPath + assetName;
+    return m_assetsPath + L"..\\src\\" + assetName;
 }
 
 // Helper function for acquiring the first available hardware adapter that supports Direct3D 12.
