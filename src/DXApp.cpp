@@ -313,11 +313,42 @@ void DXApp::OnUpdate() {
     const float translationSpeed = 0.005f;
     const float offsetBounds = 1.25f;
 
-    m_constantBufferData.offset.x += translationSpeed;
-    if (m_constantBufferData.offset.x > offsetBounds)
-    {
-        m_constantBufferData.offset.x = -offsetBounds;
-    }
+//    m_constantBufferData.offset.x += translationSpeed;
+//    if (m_constantBufferData.offset.x > offsetBounds)
+//    {
+//        m_constantBufferData.offset.x = -offsetBounds;
+//    }
+
+    static float angle = 0.0f;
+
+    angle += 0.01f;
+
+    DirectX::XMMATRIX wvp_matrix{};
+
+    wvp_matrix = XMMatrixMultiply(
+            DirectX::XMMatrixRotationY(2.5f * angle),	// zmienna angle zmienia się
+                                                // o 1 / 64 co ok. 15 ms
+            DirectX::XMMatrixRotationX(static_cast<FLOAT>(sin(angle)) / 2.0f)
+    );
+    wvp_matrix = XMMatrixMultiply(
+            wvp_matrix,
+            DirectX::XMMatrixTranslation(0.0f, 0.0f, 4.0f)
+    );
+    wvp_matrix = XMMatrixMultiply(
+            wvp_matrix,
+            DirectX::XMMatrixPerspectiveFovLH(
+                    45.0f, m_aspectRatio, 1.0f, 100.0f
+            )
+    );
+    wvp_matrix = XMMatrixTranspose(wvp_matrix);
+    XMStoreFloat4x4(
+            &m_constantBufferData.matWorldViewProj, 	// zmienna typu vs_const_buffer_t z pkt. 2d
+            wvp_matrix
+    );
+
+
+//    m_constantBufferData.matWorldViewProj =
+
     memcpy(m_pCbvDataBegin, &m_constantBufferData, sizeof(m_constantBufferData));
 }
 
