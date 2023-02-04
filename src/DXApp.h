@@ -10,12 +10,14 @@ using Microsoft::WRL::ComPtr;
 class DXApp : public DXBaseApp {
     static const UINT FrameCount = 2;
 
+public:
     struct Vertex
     {
         DirectX::XMFLOAT3 position;
         DirectX::XMFLOAT4 color;
     };
 
+private:
     // Pipeline objects.
     CD3DX12_VIEWPORT m_viewport;
     CD3DX12_RECT m_scissorRect;

@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "Singleton.h"
 #include "MainWindow.h"
+#include "Geometry.h"
 
 DXApp::DXApp() :
         DXBaseApp(),
@@ -192,14 +193,9 @@ void DXApp::LoadAssets() {
     // Create the vertex buffer.
     {
         // Define the geometry for a triangle.
-        Vertex triangleVertices[] =
-                {
-                        {{0.0f,   0.25f * m_aspectRatio,  0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
-                        {{0.25f,  -0.25f * m_aspectRatio, 0.0f}, {0.0f, 1.0f, 0.0f, 1.0f}},
-                        {{-0.25f, -0.25f * m_aspectRatio, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}}
-                };
+        auto triangleVertices = Geometry::vertices;
 
-        const UINT vertexBufferSize = sizeof(triangleVertices);
+        const UINT vertexBufferSize = Geometry::GetVerticesSize();
 
         // Note: using upload heaps to transfer static data like vert buffers is not
         // recommended. Every time the GPU needs it, the upload heap will be marshalled
@@ -222,7 +218,7 @@ void DXApp::LoadAssets() {
         UINT8 *pVertexDataBegin;
         CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
         utils::ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void **>(&pVertexDataBegin)));
-        memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
+        memcpy(pVertexDataBegin, triangleVertices, Geometry::GetVerticesSize());
         m_vertexBuffer->Unmap(0, nullptr);
 
         // Initialize the vertex buffer view.
@@ -309,7 +305,7 @@ void DXApp::PopulateCommandList() {
     m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-    m_commandList->DrawInstanced(3, 1, 0, 0);
+    m_commandList->DrawInstanced(Geometry::GetVerticesCount(), 1, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
     {
