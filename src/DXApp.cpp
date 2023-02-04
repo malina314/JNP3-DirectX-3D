@@ -309,54 +309,111 @@ void DXApp::LoadAssets() {
     }
 }
 
+static inline DirectX::XMMATRIX RotateX(float angle, float posX, float posZ) {
+    DirectX::XMMATRIX result = DirectX::XMMatrixIdentity();
+
+    result = XMMatrixMultiply(
+            result,
+            DirectX::XMMatrixTranslation(-posX, 0.0f, -posZ)
+    );
+    result = XMMatrixMultiply(
+            result,
+            DirectX::XMMatrixRotationX(angle)
+    );
+    result = XMMatrixMultiply(
+            result,
+            DirectX::XMMatrixTranslation(posX, 0.0f, posZ)
+    );
+
+    return result;
+}
+
+static inline DirectX::XMMATRIX RotateY(float angle, float posX, float posZ) {
+    DirectX::XMMATRIX result = DirectX::XMMatrixIdentity();
+    float offset = 3.0f;
+
+    posZ -= offset;
+
+    result = XMMatrixMultiply(
+            result,
+            DirectX::XMMatrixTranslation(-posX, 0.0f, -posZ)
+    );
+    result = XMMatrixMultiply(
+            result,
+            DirectX::XMMatrixRotationY(angle)
+    );
+    result = XMMatrixMultiply(
+            result,
+            DirectX::XMMatrixTranslation(posX, 0.0f, posZ)
+    );
+
+    return result;
+}
+
 // Update frame-based values.
 void DXApp::OnUpdate() {
-    DirectX::XMMATRIX wvp_matrix{};
+    DirectX::XMMATRIX wvp_matrix = DirectX::XMMatrixIdentity();
     Input &input = Singleton<Input>::getInstance();
 
-    // rotation
-//    wvp_matrix = XMMatrixMultiply(
-//            DirectX::XMMatrixRotationY(2.5f * angle),
-//            DirectX::XMMatrixRotationX(static_cast<FLOAT>(sin(angle)) / 2.0f)
-//    );
     static float angleV = 0.0f;
     static float angleH = 0.0f;
 
+    static float positionX = 0.0f;
+    static float positionZ = 4.0f;
+
+    // input for rotations
     if (input.isKeyPressed(Key::ROT_UP)) {
-        angleV -= 0.1f;
+        angleV -= 0.01f;
     } else if (input.isKeyPressed(Key::ROT_DOWN)) {
-        angleV += 0.1f;
+        angleV += 0.01f;
     }
     if (input.isKeyPressed(Key::ROT_LEFT)) {
-        angleH -= 0.1f;
+        angleH += 0.01f;
     } else if (input.isKeyPressed(Key::ROT_RIGHT)) {
-        angleH += 0.1f;
+        angleH -= 0.01f;
     }
 
-    wvp_matrix = DirectX::XMMatrixLookToLH(
-            DirectX::XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), // position
-            DirectX::XMVectorSet(sinf(angleH), cosf(angleH), cosf(angleV), 0.0f), // direction
-            DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f) // up
-    );
-
-    // translation
-    static float offsetX = 0.0f;
-    static float offsetZ = 0.0f;
-
+    // input for position
     if (input.isKeyPressed(Key::MOV_FORWARD)) {
-        offsetZ -= 0.1f;
+        positionZ -= 0.1f;
     } else if (input.isKeyPressed(Key::MOV_BACKWARD)) {
-        offsetZ += 0.1f;
+        positionZ += 0.1f;
     }
     if (input.isKeyPressed(Key::MOV_LEFT)) {
-        offsetX -= 0.1f;
+        positionX -= 0.1f;
     } else if (input.isKeyPressed(Key::MOV_RIGHT)) {
-        offsetX += 0.1f;
+        positionX += 0.1f;
     }
+
+
+    // rotation
+//    wvp_matrix = XMMatrixMultiply(
+//            DirectX::XMMatrixRotationY(2.5f * 1),
+//            DirectX::XMMatrixRotationX(static_cast<FLOAT>(sin(1)) / 2.0f)
+//    );
+
+
+
+
+//    wvp_matrix = DirectX::XMMatrixLookToLH(
+//            DirectX::XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), // position
+//            DirectX::XMVectorSet(sinf(angleH), cosf(angleH), cosf(angleV), 0.0f), // direction
+//            DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f) // up
+//    );
+
+
+
+
+
+    // translation
+    wvp_matrix = XMMatrixMultiply(
+            wvp_matrix,
+            DirectX::XMMatrixTranslation(positionX, 0.0f, positionZ)
+    );
 
     wvp_matrix = XMMatrixMultiply(
             wvp_matrix,
-            DirectX::XMMatrixTranslation(offsetX, 0.0f, 4.0f + offsetZ)
+            RotateY(angleH, positionX, positionZ)
     );
 
     // projection
