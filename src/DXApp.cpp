@@ -4,6 +4,7 @@
 #include "Singleton.h"
 #include "MainWindow.h"
 #include "Geometry.h"
+#include "Input.h"
 
 DXApp::DXApp() :
         DXBaseApp(),
@@ -310,46 +311,71 @@ void DXApp::LoadAssets() {
 
 // Update frame-based values.
 void DXApp::OnUpdate() {
-    const float translationSpeed = 0.005f;
-    const float offsetBounds = 1.25f;
-
-//    m_constantBufferData.offset.x += translationSpeed;
-//    if (m_constantBufferData.offset.x > offsetBounds)
-//    {
-//        m_constantBufferData.offset.x = -offsetBounds;
-//    }
-
-    static float angle = 0.0f;
-
-    angle += 0.01f;
-
     DirectX::XMMATRIX wvp_matrix{};
+    Input &input = Singleton<Input>::getInstance();
 
-    wvp_matrix = XMMatrixMultiply(
-            DirectX::XMMatrixRotationY(2.5f * angle),	// zmienna angle zmienia się
-                                                // o 1 / 64 co ok. 15 ms
-            DirectX::XMMatrixRotationX(static_cast<FLOAT>(sin(angle)) / 2.0f)
+    // rotation
+//    wvp_matrix = XMMatrixMultiply(
+//            DirectX::XMMatrixRotationY(2.5f * angle),
+//            DirectX::XMMatrixRotationX(static_cast<FLOAT>(sin(angle)) / 2.0f)
+//    );
+    static float angleV = 0.0f;
+    static float angleH = 0.0f;
+
+    if (input.isKeyPressed(Key::ROT_UP)) {
+        angleV -= 0.1f;
+    } else if (input.isKeyPressed(Key::ROT_DOWN)) {
+        angleV += 0.1f;
+    }
+    if (input.isKeyPressed(Key::ROT_LEFT)) {
+        angleH -= 0.1f;
+    } else if (input.isKeyPressed(Key::ROT_RIGHT)) {
+        angleH += 0.1f;
+    }
+
+    wvp_matrix = DirectX::XMMatrixLookToLH(
+            DirectX::XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), // position
+            DirectX::XMVectorSet(sinf(angleH), cosf(angleH), cosf(angleV), 0.0f), // direction
+            DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f) // up
     );
+
+    // translation
+    static float offsetX = 0.0f;
+    static float offsetZ = 0.0f;
+
+    if (input.isKeyPressed(Key::MOV_FORWARD)) {
+        offsetZ -= 0.1f;
+    } else if (input.isKeyPressed(Key::MOV_BACKWARD)) {
+        offsetZ += 0.1f;
+    }
+    if (input.isKeyPressed(Key::MOV_LEFT)) {
+        offsetX -= 0.1f;
+    } else if (input.isKeyPressed(Key::MOV_RIGHT)) {
+        offsetX += 0.1f;
+    }
+
     wvp_matrix = XMMatrixMultiply(
             wvp_matrix,
-            DirectX::XMMatrixTranslation(0.0f, 0.0f, 4.0f)
+            DirectX::XMMatrixTranslation(offsetX, 0.0f, 4.0f + offsetZ)
     );
+
+    // projection
     wvp_matrix = XMMatrixMultiply(
             wvp_matrix,
             DirectX::XMMatrixPerspectiveFovLH(
                     45.0f, m_aspectRatio, 1.0f, 100.0f
             )
     );
+
     wvp_matrix = XMMatrixTranspose(wvp_matrix);
     XMStoreFloat4x4(
-            &m_constantBufferData.matWorldViewProj, 	// zmienna typu vs_const_buffer_t z pkt. 2d
+            &m_constantBufferData.matWorldViewProj,
             wvp_matrix
     );
 
-
-//    m_constantBufferData.matWorldViewProj =
-
     memcpy(m_pCbvDataBegin, &m_constantBufferData, sizeof(m_constantBufferData));
+
+    Singleton<Input>::getInstance().update();
 }
 
 // Render the scene.

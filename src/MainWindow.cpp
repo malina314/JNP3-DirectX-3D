@@ -50,10 +50,10 @@ void MainWindow::HandleKeyDown(WPARAM key) const {
             Singleton<Input>::getInstance().sendKeyDown(Key::ROT_RIGHT);
             break;
         case 'W':
-            Singleton<Input>::getInstance().sendKeyDown(Key::MOV_UP);
+            Singleton<Input>::getInstance().sendKeyDown(Key::MOV_FORWARD);
             break;
         case 'S':
-            Singleton<Input>::getInstance().sendKeyDown(Key::MOV_DOWN);
+            Singleton<Input>::getInstance().sendKeyDown(Key::MOV_BACKWARD);
             break;
         case 'A':
             Singleton<Input>::getInstance().sendKeyDown(Key::MOV_LEFT);
@@ -81,10 +81,10 @@ void MainWindow::HandleKeyUp(WPARAM key) const {
             Singleton<Input>::getInstance().sendKeyUp(Key::ROT_RIGHT);
             break;
         case 'W':
-            Singleton<Input>::getInstance().sendKeyUp(Key::MOV_UP);
+            Singleton<Input>::getInstance().sendKeyUp(Key::MOV_FORWARD);
             break;
         case 'S':
-            Singleton<Input>::getInstance().sendKeyUp(Key::MOV_DOWN);
+            Singleton<Input>::getInstance().sendKeyUp(Key::MOV_BACKWARD);
             break;
         case 'A':
             Singleton<Input>::getInstance().sendKeyUp(Key::MOV_LEFT);

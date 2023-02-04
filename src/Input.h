@@ -5,8 +5,8 @@
 #include <cstring>
 
 enum class Key {
-    MOV_UP,
-    MOV_DOWN,
+    MOV_FORWARD,
+    MOV_BACKWARD,
     MOV_LEFT,
     MOV_RIGHT,
     ROT_UP,
@@ -32,7 +32,7 @@ public:
         keyPressed[static_cast<int>(key)] = false;
     }
 
-    // Should be called by engine at the end of each physics update
+    // Should be called by reader after reading input
     void update() {
         std::memset(keyDown, 0, sizeof(keyDown));
         std::memset(keyUp, 0, sizeof(keyUp));
