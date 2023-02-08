@@ -21,5 +21,15 @@
 
 #include <wrl.h>
 
+// Assign a name to the object to aid with debugging.
+#if defined(_DEBUG) || defined(DBG)
+inline void SetName(ID3D12Object* pObject, LPCWSTR name)
+{
+    pObject->SetName(name);
+}
+#endif
+
+#define NAME_D3D12_OBJECT(x) SetName((x).Get(), L#x)
+
 
 #endif //DIRECTX_3D_FINAL_PROJECT_INCLUDE_HELPER_H

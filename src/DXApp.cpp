@@ -107,6 +107,13 @@ void DXApp::LoadPipeline() {
         rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         utils::ThrowIfFailed(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
 
+        // Describe and create a depth stencil view (DSV) descriptor heap.
+        D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+        dsvHeapDesc.NumDescriptors = 1;
+        dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+        dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+       utils::ThrowIfFailed(m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap)));
+
         m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
         // Describe and create a constant buffer view (CBV) descriptor heap.
@@ -198,22 +205,96 @@ void DXApp::LoadAssets() {
                         {"COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
                 };
 
-        // Describe and create the graphics pipeline state object (PSO).
-        D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-        psoDesc.InputLayout = {inputElementDescs, _countof(inputElementDescs)};
-        psoDesc.pRootSignature = m_rootSignature.Get();
-        psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
-        psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
-        psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-        psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-        psoDesc.DepthStencilState.DepthEnable = FALSE;
-        psoDesc.DepthStencilState.StencilEnable = FALSE;
-        psoDesc.SampleMask = UINT_MAX;
-        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        psoDesc.NumRenderTargets = 1;
-        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-        psoDesc.SampleDesc.Count = 1;
-        utils::ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
+        // To bring up depth bounds feature, DX12 introduces a new concept to create pipeline state, called PSO stream.
+        // It is required to use PSO stream to enable depth bounds test.
+        //
+        // PSO stream is a more flexible way to extend the design of pipeline state. In this new concept, you can think
+        // each subobject (e.g. Root Signature, Vertex Shader, or Pixel Shader) in the pipeline state is a token and the
+        // whole pipeline state is a token stream. To create a PSO stream, you describe a set of subobjects required for rendering, and
+        // then use the descriptor to create the a PSO. For any pipeline state subobject not found in the descriptor,
+        // defaults will be used. Defaults will also be used if an old version of a subobject is found in the stream. For example,
+        // an old DepthStencil State desc would not contain depth bounds test information so the depth bounds test value will
+        // default to disabled.
+
+        // Define the pipeline state for rendering a triangle with depth bounds test enabled.
+        struct RENDER_WITH_DBT_PSO_STREAM
+        {
+            CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE RootSignature;
+            CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT InputLayout;
+            CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY PrimitiveTopologyType;
+            CD3DX12_PIPELINE_STATE_STREAM_VS VS;
+            CD3DX12_PIPELINE_STATE_STREAM_PS PS;
+            CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL1 DepthStencilState; // New depth stencil subobject with depth bounds test toggle
+            CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT DSVFormat;
+            CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
+        } renderWithDBTPSOStream;
+
+        // Wraps an array of render target format(s).
+        D3D12_RT_FORMAT_ARRAY RTFormatArray = {};
+        RTFormatArray.NumRenderTargets = 1;
+        RTFormatArray.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+        renderWithDBTPSOStream.RootSignature = m_rootSignature.Get();
+        renderWithDBTPSOStream.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
+        renderWithDBTPSOStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        renderWithDBTPSOStream.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
+        renderWithDBTPSOStream.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
+        renderWithDBTPSOStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+        renderWithDBTPSOStream.RTVFormats = RTFormatArray;
+
+        // Create the descriptor of the PSO stream
+        const D3D12_PIPELINE_STATE_STREAM_DESC renderWithDBTPSOStreamDesc = { sizeof(renderWithDBTPSOStream), &renderWithDBTPSOStream };
+
+        // Check for the feature support of Depth Bounds Test
+        D3D12_FEATURE_DATA_D3D12_OPTIONS2 Options = {};
+        DepthBoundsTestSupported = SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS2, &Options, sizeof(D3D12_FEATURE_DATA_D3D12_OPTIONS2))) &&
+                                   Options.DepthBoundsTestSupported;
+
+        // Create a PSO with depth bounds test enabled (or disabled, based on the result of the feature query).
+        CD3DX12_DEPTH_STENCIL_DESC1 depthDesc(D3D12_DEFAULT);
+        depthDesc.DepthBoundsTestEnable = DepthBoundsTestSupported;
+        depthDesc.DepthEnable = TRUE;
+        renderWithDBTPSOStream.DepthStencilState = depthDesc;
+//        renderWithDBTPSOStream.DepthStencilState.DepthEnable = TRUE;
+//        renderWithDBTPSOStream.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+//        renderWithDBTPSOStream.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+//        renderWithDBTPSOStream.DepthStencilState.StencilEnable = FALSE;
+//        renderWithDBTPSOStream.DepthStencilState.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
+//        renderWithDBTPSOStream.DepthStencilState.StencilWriteMask = D3D12_DEFAULT_STENCIL_READ_MASK;
+//        renderWithDBTPSOStream.DepthStencilState.FrontFace = {
+//                .StencilFailOp = D3D12_STENCIL_OP_KEEP,
+//                .StencilDepthFailOp = D3D12_STENCIL_OP_KEEP,
+//                .StencilPassOp = D3D12_STENCIL_OP_KEEP,
+//                .StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS
+//        };
+//        renderWithDBTPSOStream.DepthStencilState.BackFace = {
+//                .StencilFailOp = D3D12_STENCIL_OP_KEEP,
+//                .StencilDepthFailOp = D3D12_STENCIL_OP_KEEP,
+//                .StencilPassOp = D3D12_STENCIL_OP_KEEP,
+//                .StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS
+//        };
+       utils::ThrowIfFailed(m_device->CreatePipelineState(&renderWithDBTPSOStreamDesc, IID_PPV_ARGS(&m_pipelineState)));
+
+        // Create a PSO to prime depth only.
+        struct DEPTH_ONLY_PSO_STREAM
+        {
+            CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE RootSignature;
+            CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT InputLayout;
+            CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY PrimitiveTopologyType;
+            CD3DX12_PIPELINE_STATE_STREAM_VS VS;
+            CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT DSVFormat;
+            CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
+        } depthOnlyPSOStream;
+
+        depthOnlyPSOStream.RootSignature = m_rootSignature.Get();
+        depthOnlyPSOStream.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
+        depthOnlyPSOStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        depthOnlyPSOStream.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
+        depthOnlyPSOStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+        depthOnlyPSOStream.RTVFormats = RTFormatArray;
+
+        const D3D12_PIPELINE_STATE_STREAM_DESC depthOnlyPSOStreamDesc = { sizeof(depthOnlyPSOStream), &depthOnlyPSOStream };
+       utils::ThrowIfFailed(m_device->CreatePipelineState(&depthOnlyPSOStreamDesc, IID_PPV_ARGS(&m_depthOnlyPipelineState)));
     }
 
     // Create the command list.
@@ -259,6 +340,42 @@ void DXApp::LoadAssets() {
         m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
         m_vertexBufferView.StrideInBytes = sizeof(Vertex);
         m_vertexBufferView.SizeInBytes = vertexBufferSize;
+    }
+
+    // Create the depth stencil view.
+    {
+        D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+        depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+        depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+        depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+        D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+        depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+        depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+        depthOptimizedClearValue.DepthStencil.Stencil = 0;
+
+        {
+            auto tmp1 = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+            tmp1.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+            tmp1.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+            tmp1.CreationNodeMask = 1;
+            tmp1.VisibleNodeMask = 1;
+            auto tmp2 = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, 1920, 1080, 1, 0, 1, 0,
+                                                     D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+
+            utils::ThrowIfFailed(m_device->CreateCommittedResource(
+                    &tmp1,
+                    D3D12_HEAP_FLAG_NONE,
+                    &tmp2,
+                    D3D12_RESOURCE_STATE_DEPTH_WRITE,
+                    &depthOptimizedClearValue,
+                    IID_PPV_ARGS(&m_depthStencil)
+            ));
+        }
+
+        NAME_D3D12_OBJECT(m_depthStencil);
+
+        m_device->CreateDepthStencilView(m_depthStencil.Get(), &depthStencilDesc, m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
     }
 
     // Create the constant buffer.
@@ -311,6 +428,8 @@ void DXApp::LoadAssets() {
 
 // Update frame-based values.
 void DXApp::OnUpdate() {
+    m_frameNumber++;
+
     DirectX::XMMATRIX wvp_matrix = DirectX::XMMatrixIdentity();
     Input &input = Singleton<Input>::getInstance();
 
@@ -425,6 +544,7 @@ void DXApp::PopulateCommandList() {
     // list, that command list can then be reset at any time and must be before
     // re-recording.
     utils::ThrowIfFailed(m_commandList->Reset(m_commandAllocator.Get(), m_pipelineState.Get()));
+//    utils::ThrowIfFailed(m_commandList->Reset(m_commandAllocator.Get(), m_depthOnlyPipelineState.Get()));
 
     // Set necessary state.
     m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
@@ -443,16 +563,39 @@ void DXApp::PopulateCommandList() {
         m_commandList->ResourceBarrier(1, &tmp);
     }
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex,
-                                            m_rtvDescriptorSize);
-    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+    m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
     // Record commands.
-    const float clearColor[] = {0.0f, 0.2f, 0.4f, 1.0f};
+    const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
     m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    m_commandList->ClearDepthStencilView(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH,
+                                         1.0f, 0, 0, nullptr);
+
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+
+    // Render only the depth stencil view of the triangle to prime the depth value of the triangle
     m_commandList->DrawInstanced(Geometry::GetVerticesCount(), 1, 0, 0);
+
+    // Move depth bounds so we can see they move. Depth bound test will test against DEST depth
+    // that we primed previously
+//    const FLOAT f = 0.125f + sinf((m_frameNumber & 0x7F) / 127.f) * 0.125f;      // [0.. 0.25]
+//    if (DepthBoundsTestSupported)
+//    {
+//        m_commandList->OMSetDepthBounds(0.0f + f, 1.0f - f);
+//    }
+
+    // Render the triangle with depth bounds
+    m_commandList->SetPipelineState(m_pipelineState.Get());
+    m_commandList->DrawInstanced(Geometry::GetVerticesCount(), 1, 0, 0);
+
+    // Disable depth bounds on Direct3D 12 by resetting back to the default range
+//    if (DepthBoundsTestSupported)
+//    {
+//        m_commandList->OMSetDepthBounds(0.0f, 1.0f);
+//    }
 
     // Indicate that the back buffer will now be used to present.
     {
