@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-project("DirectX 3D final project")
+project("DirectX 3D TEXTURES final solution")
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -22,6 +22,12 @@ endif ()
 find_library(DX_GI dxgi)
 if (NOT DX_GI)
     message(FATAL_ERROR "Could not find DXGI")
+endif ()
+
+# Searching for DX_GUID library (dxguid.lib)
+find_library(DX_GUID dxguid)
+if (NOT DX_GUID)
+    message(FATAL_ERROR "Could not find DX_GUID")
 endif ()
 
 # Searching for D3DCompiler library (D3DCompiler.lib)
@@ -52,4 +58,4 @@ add_custom_target(
 
 add_executable(DirectX_3D_final_project_exe ${SOURCE_FILES})
 
-target_link_libraries(DirectX_3D_final_project_exe ${D3D_12} ${DX_GI} ${D3D_Compiler})
+target_link_libraries(DirectX_3D_final_project_exe ${D3D_12} ${DX_GI} ${DX_GUID} ${D3D_Compiler})
