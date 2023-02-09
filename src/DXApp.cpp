@@ -496,7 +496,7 @@ void DXApp::OnUpdate() {
     wvp_matrix = XMMatrixMultiply(
             wvp_matrix,
             DirectX::XMMatrixPerspectiveFovLH(
-                    45.0f, m_aspectRatio, 1.0f, 100.0f
+                    45.0f, m_aspectRatio, 0.1f, 100.0f
             )
     );
 
