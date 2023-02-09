@@ -20,8 +20,23 @@ public:
     struct Vertex
     {
         DirectX::XMFLOAT3 position;
+        DirectX::XMFLOAT3 normal;
+        DirectX::XMFLOAT4 color;
         DirectX::XMFLOAT2 uv;
     };
+
+    struct SceneConstantBuffer
+    {
+        DirectX::XMFLOAT4X4 matWorldViewProj;
+        DirectX::XMFLOAT4X4 matWorldView;
+        DirectX::XMFLOAT4X4 matView;
+        DirectX::XMFLOAT4 colMaterial;
+        DirectX::XMFLOAT4 colLight;
+        DirectX::XMFLOAT4 dirLight;
+        DirectX::XMFLOAT4 padding; // Padding so the constant buffer is 256-byte aligned.
+    };
+    static_assert((sizeof(SceneConstantBuffer) % 256) == 0, "Constant Buffer size must be 256-byte aligned");
+
 
 private:
     static const UINT FrameCount = 2;
@@ -39,6 +54,7 @@ private:
     ComPtr<ID3D12CommandQueue> m_commandQueue;
     ComPtr<ID3D12RootSignature> m_rootSignature;
     ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
+    ComPtr<ID3D12DescriptorHeap> m_cbvHeap;
     ComPtr<ID3D12DescriptorHeap> m_srvHeap;
     ComPtr<ID3D12PipelineState> m_pipelineState;
     ComPtr<ID3D12GraphicsCommandList> m_commandList;
@@ -48,6 +64,9 @@ private:
     ComPtr<ID3D12Resource> m_vertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
     ComPtr<ID3D12Resource> m_texture;
+    ComPtr<ID3D12Resource> m_constantBuffer;
+    SceneConstantBuffer m_constantBufferData;
+    UINT8* m_pCbvDataBegin;
 
     // Synchronization objects.
     UINT m_frameIndex;
