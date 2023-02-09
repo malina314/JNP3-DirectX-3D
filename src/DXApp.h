@@ -14,13 +14,19 @@ public:
     struct Vertex
     {
         DirectX::XMFLOAT3 position;
+        DirectX::XMFLOAT3 normal;
         DirectX::XMFLOAT4 color;
     };
 
     struct SceneConstantBuffer
     {
         DirectX::XMFLOAT4X4 matWorldViewProj;
-        float padding[48]; // Padding so the constant buffer is 256-byte aligned.
+        DirectX::XMFLOAT4X4 matWorldView;
+        DirectX::XMFLOAT4X4 matView;
+        DirectX::XMFLOAT4 colMaterial;
+        DirectX::XMFLOAT4 colLight;
+        DirectX::XMFLOAT4 dirLight;
+        DirectX::XMFLOAT4 padding; // Padding so the constant buffer is 256-byte aligned.
     };
     static_assert((sizeof(SceneConstantBuffer) % 256) == 0, "Constant Buffer size must be 256-byte aligned");
 

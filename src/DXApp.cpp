@@ -202,7 +202,11 @@ void DXApp::LoadAssets() {
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
                 {
                         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-                        {"COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+                        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 12,
+                         D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+                         0},
+                        {"COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24,
+                         D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
                 };
 
         // To bring up depth bounds feature, DX12 introduces a new concept to create pipeline state, called PSO stream.
@@ -431,6 +435,8 @@ void DXApp::OnUpdate() {
     m_frameNumber++;
 
     DirectX::XMMATRIX wvp_matrix = DirectX::XMMatrixIdentity();
+    DirectX::XMMATRIX wv_matrix = DirectX::XMMatrixIdentity();
+    DirectX::XMMATRIX v_matrix = DirectX::XMMatrixIdentity();
     Input &input = Singleton<Input>::getInstance();
 
     static float angleV = 0.0f;
@@ -472,7 +478,7 @@ void DXApp::OnUpdate() {
     );
 
     // rotation
-    wvp_matrix = XMMatrixMultiply(wvp_matrix, rotations);
+    v_matrix = XMMatrixMultiply(v_matrix, rotations);
 
     DirectX::XMVECTOR movVec = DirectX::XMVector3Transform(
             DirectX::XMVectorSet(movX, 0.0f, movZ, 0.0f),
@@ -487,24 +493,40 @@ void DXApp::OnUpdate() {
     );
 
     // translation
-    wvp_matrix = XMMatrixMultiply(
-            wvp_matrix,
+    wv_matrix = XMMatrixMultiply(
+            v_matrix,
             DirectX::XMMatrixTranslationFromVector(translation)
     );
 
     // projection
     wvp_matrix = XMMatrixMultiply(
-            wvp_matrix,
+            wv_matrix,
             DirectX::XMMatrixPerspectiveFovLH(
                     45.0f, m_aspectRatio, 0.1f, 100.0f
             )
     );
 
+    v_matrix = XMMatrixTranspose(v_matrix);
+    wv_matrix = XMMatrixTranspose(wv_matrix);
     wvp_matrix = XMMatrixTranspose(wvp_matrix);
+
     XMStoreFloat4x4(
             &m_constantBufferData.matWorldViewProj,
             wvp_matrix
     );
+
+    XMStoreFloat4x4(
+            &m_constantBufferData.matWorldView,
+            wv_matrix
+    );
+
+    XMStoreFloat4x4(
+            &m_constantBufferData.matView,
+            v_matrix
+    );
+
+    m_constantBufferData.colLight = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+    m_constantBufferData.dirLight = DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
 
     memcpy(m_pCbvDataBegin, &m_constantBufferData, sizeof(m_constantBufferData));
 
