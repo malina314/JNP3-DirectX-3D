@@ -22,6 +22,7 @@ PSInput VSMain(float3 pos : POSITION,
 {
     PSInput result;
     float4 NW = mul(float4(norm, 0.0f), matWorldView);
+//     float4 NW = float4(norm, 0.0f);
     float4 LW = mul(dirLight, matView);
     result.position = mul(float4(pos, 1.0f), matWorldViewProj);
     result.color = mul(
