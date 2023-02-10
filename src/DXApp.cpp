@@ -5,6 +5,8 @@
 #include "MainWindow.h"
 #include "Geometry.h"
 #include "Input.h"
+#include "vertex_shader.h"
+#include "pixel_shader.h"
 
 DXApp::DXApp() :
         DXBaseApp(),
@@ -181,22 +183,12 @@ void DXApp::LoadAssets() {
 
     // Create the pipeline state, which includes compiling and loading shaders.
     {
-        ComPtr<ID3DBlob> vertexShader;
-        ComPtr<ID3DBlob> pixelShader;
-
 #if defined(_DEBUG)
         // Enable better shader debugging with the graphics debugging tools.
         UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #else
         UINT compileFlags = 0;
 #endif
-
-        utils::ThrowIfFailed(
-                D3DCompileFromFile(GetAssetFullPath(L"shaders.hlsl").c_str(), nullptr, nullptr, "VSMain", "vs_5_0",
-                                   compileFlags, 0, &vertexShader, nullptr));
-        utils::ThrowIfFailed(
-                D3DCompileFromFile(GetAssetFullPath(L"shaders.hlsl").c_str(), nullptr, nullptr, "PSMain", "ps_5_0",
-                                   compileFlags, 0, &pixelShader, nullptr));
 
         // Define the vertex input layout.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -241,8 +233,8 @@ void DXApp::LoadAssets() {
         renderWithDBTPSOStream.RootSignature = m_rootSignature.Get();
         renderWithDBTPSOStream.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
         renderWithDBTPSOStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        renderWithDBTPSOStream.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
-        renderWithDBTPSOStream.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
+        renderWithDBTPSOStream.VS = { vs_main, sizeof(vs_main) };
+        renderWithDBTPSOStream.PS = { ps_main, sizeof(ps_main) };
         renderWithDBTPSOStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
         renderWithDBTPSOStream.RTVFormats = RTFormatArray;
 
@@ -293,7 +285,7 @@ void DXApp::LoadAssets() {
         depthOnlyPSOStream.RootSignature = m_rootSignature.Get();
         depthOnlyPSOStream.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
         depthOnlyPSOStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        depthOnlyPSOStream.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
+        depthOnlyPSOStream.VS = { vs_main, sizeof(vs_main) };
         depthOnlyPSOStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
         depthOnlyPSOStream.RTVFormats = RTFormatArray;
 
