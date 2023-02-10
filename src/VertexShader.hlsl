@@ -7,6 +7,7 @@ cbuffer SceneConstantBuffer : register(b0)
     float4 colLight;
     float4 dirLight;
     float4 padding;
+
 };
 
 struct PSInput
@@ -19,7 +20,7 @@ struct PSInput
 Texture2D g_texture : register(t0);
 SamplerState g_sampler : register(s0);
 
-PSInput VSMain(float3 pos : POSITION,
+PSInput main(float3 pos : POSITION,
                float3 norm : NORMAL,
                float4 col : COLOR,
                float4 uv : TEXCOORD)
@@ -47,9 +48,4 @@ PSInput VSMain(float3 pos : POSITION,
 //     result.uv = f4;
 
     return result;
-}
-
-float4 PSMain(PSInput input) : SV_TARGET
-{
-    return g_texture.Sample(g_sampler, input.uv);
 }

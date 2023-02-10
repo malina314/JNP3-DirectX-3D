@@ -16,6 +16,8 @@
 #include "MainWindow.h"
 #include "Geometry.h"
 #include "Input.h"
+#include "vertex_shader.h"
+#include "pixel_shader.h"
 
 DXApp::DXApp() :
         DXBaseApp(),
@@ -130,6 +132,15 @@ void DXApp::LoadPipeline()
         utils::ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
 
         m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+        // Describe and create a constant buffer view (CBV) descriptor heap.
+        // Flags indicate that this descriptor heap can be bound to the pipeline
+        // and that descriptors contained in it can be referenced by a root table.
+        D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
+        cbvHeapDesc.NumDescriptors = 1;
+        cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        utils::ThrowIfFailed(m_device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&m_cbvHeap)));
     }
 
     // Create frame resources.
@@ -195,8 +206,6 @@ void DXApp::LoadAssets()
 
     // Create the pipeline state, which includes compiling and loading shaders.
     {
-        ComPtr<ID3DBlob> vertexShader;
-        ComPtr<ID3DBlob> pixelShader;
 
 #if defined(_DEBUG)
         // Enable better shader debugging with the graphics debugging tools.
@@ -204,10 +213,6 @@ void DXApp::LoadAssets()
 #else
         UINT compileFlags = 0;
 #endif
-
-        utils::ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders.hlsl").c_str(), nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
-        utils::ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders.hlsl").c_str(), nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
-
         // Define the vertex input layout.
         // This should be consistent with the Vertex struct in DXApp.h.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -222,8 +227,8 @@ void DXApp::LoadAssets()
         D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
         psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
         psoDesc.pRootSignature = m_rootSignature.Get();
-        psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
-        psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
+        psoDesc.VS = { vs_main, sizeof(vs_main) };
+        psoDesc.PS = { ps_main, sizeof(ps_main) };
         psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
         psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
         psoDesc.DepthStencilState.DepthEnable = FALSE;
@@ -354,6 +359,36 @@ void DXApp::LoadAssets()
     ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
     m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
+    // Create the constant buffer.
+    {
+        const UINT constantBufferSize = sizeof(SceneConstantBuffer);    // CB size is required to be 256-byte aligned.
+
+        {
+            auto tmp1 = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+            auto tmp2 = CD3DX12_RESOURCE_DESC::Buffer(constantBufferSize);
+
+            utils::ThrowIfFailed(m_device->CreateCommittedResource(
+                    &tmp1,
+                    D3D12_HEAP_FLAG_NONE,
+                    &tmp2,
+                    D3D12_RESOURCE_STATE_GENERIC_READ,
+                    nullptr,
+                    IID_PPV_ARGS(&m_constantBuffer)));
+        }
+
+        // Describe and create a constant buffer view.
+        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+        cbvDesc.BufferLocation = m_constantBuffer->GetGPUVirtualAddress();
+        cbvDesc.SizeInBytes = constantBufferSize;
+        m_device->CreateConstantBufferView(&cbvDesc, m_cbvHeap->GetCPUDescriptorHandleForHeapStart());
+
+        // Map and initialize the constant buffer. We don't unmap this until the
+        // app closes. Keeping things mapped for the lifetime of the resource is okay.
+        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+        utils::ThrowIfFailed(m_constantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pCbvDataBegin)));
+        memcpy(m_pCbvDataBegin, &m_constantBufferData, sizeof(m_constantBufferData));
+    }
+
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
     {
         utils::ThrowIfFailed(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
@@ -413,6 +448,103 @@ std::vector<UINT8> DXApp::GenerateTextureData()
 // Update frame-based values.
 void DXApp::OnUpdate()
 {
+    DirectX::XMMATRIX wvp_matrix = DirectX::XMMatrixIdentity();
+    DirectX::XMMATRIX wv_matrix = DirectX::XMMatrixIdentity();
+    DirectX::XMMATRIX v_matrix = DirectX::XMMatrixIdentity();
+    Input &input = Singleton<Input>::getInstance();
+
+    static float angleV = 0.0f;
+    static float angleH = 0.0f;
+    static DirectX::XMVECTOR position = DirectX::XMVectorSet(0.0f, 0.0f, 3.0f, 0.0f);
+
+    float movX = 0.0f;
+    float movZ = 0.0f;
+
+    const float rotationSpeed = 0.02f;
+
+    // input for rotations
+    if (input.isKeyPressed(Key::ROT_UP)) {
+        angleV += rotationSpeed;
+    } else if (input.isKeyPressed(Key::ROT_DOWN)) {
+        angleV -= rotationSpeed;
+    }
+    if (input.isKeyPressed(Key::ROT_LEFT)) {
+        angleH += rotationSpeed;
+    } else if (input.isKeyPressed(Key::ROT_RIGHT)) {
+        angleH -= rotationSpeed;
+    }
+
+    // input for position
+    if (input.isKeyPressed(Key::MOV_FORWARD)) {
+        movZ -= 0.1f;
+    } else if (input.isKeyPressed(Key::MOV_BACKWARD)) {
+        movZ += 0.1f;
+    }
+    if (input.isKeyPressed(Key::MOV_LEFT)) {
+        movX += 0.1f;
+    } else if (input.isKeyPressed(Key::MOV_RIGHT)) {
+        movX -= 0.1f;
+    }
+
+    DirectX::XMMATRIX rotations = XMMatrixMultiply(
+            DirectX::XMMatrixRotationY(angleH),
+            DirectX::XMMatrixRotationX(angleV)
+    );
+
+    // rotation
+    v_matrix = XMMatrixMultiply(v_matrix, rotations);
+
+    DirectX::XMVECTOR movVec = DirectX::XMVector3Transform(
+            DirectX::XMVectorSet(movX, 0.0f, movZ, 0.0f),
+            XMMatrixInverse(nullptr, rotations)
+    );
+
+    position = DirectX::XMVectorAdd(position, movVec);
+
+    DirectX::XMVECTOR translation = DirectX::XMVector3Transform(
+            position,
+            rotations
+    );
+
+    // translation
+    wv_matrix = XMMatrixMultiply(
+            v_matrix,
+            DirectX::XMMatrixTranslationFromVector(translation)
+    );
+
+    // projection
+    wvp_matrix = XMMatrixMultiply(
+            wv_matrix,
+            DirectX::XMMatrixPerspectiveFovLH(
+                    45.0f, m_aspectRatio, 0.1f, 100.0f
+            )
+    );
+
+    v_matrix = XMMatrixTranspose(v_matrix);
+    wv_matrix = XMMatrixTranspose(wv_matrix);
+    wvp_matrix = XMMatrixTranspose(wvp_matrix);
+
+    XMStoreFloat4x4(
+            &m_constantBufferData.matWorldViewProj,
+            wvp_matrix
+    );
+
+    XMStoreFloat4x4(
+            &m_constantBufferData.matWorldView,
+            wv_matrix
+    );
+
+    XMStoreFloat4x4(
+            &m_constantBufferData.matView,
+            v_matrix
+    );
+
+    m_constantBufferData.colLight = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+    m_constantBufferData.dirLight = DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
+
+    memcpy(m_pCbvDataBegin, &m_constantBufferData, sizeof(m_constantBufferData));
+
+    Singleton<Input>::getInstance().update();
 }
 
 // Render the scene.
