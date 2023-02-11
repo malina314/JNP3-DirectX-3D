@@ -13,7 +13,7 @@ cbuffer SceneConstantBuffer : register(b0)
 struct PSInput
 {
     float4 position : SV_POSITION;
-//     float4 color : COLOR; // probably not needed
+    float4 color : COLOR; // probably not needed
     float2 uv : TEXCOORD;
 };
 
@@ -27,23 +27,23 @@ PSInput main(float3 pos : POSITION,
 {
     PSInput result;
 
-    float4 NW = mul(float4(norm, 0.0f), matWorldView);
-//     float4 NW = float4(norm, 0.0f);
+//     float4 NW = mul(float4(norm, 0.0f), matWorldView);
+    float4 NW = float4(norm, 0.0f);
     float4 LW = mul(dirLight, matView);
 
-//     result.position = float4(pos, 1.0f);
     result.position = float4(pos, 1.0f);
-    result.position = mul(float4(pos, 1.0f), matWorldViewProj);
+//     result.position = mul(float4(pos, 1.0f), matWorldViewProj);
 
 // this breaks project compilation
-//     result.color = mul(
-//             max(-dot(normalize(LW), normalize(NW)), 0.0f),
-//             colLight * col); // or colMaterial instead of col
+    result.color = mul(
+            max(-dot(normalize(LW), normalize(NW)), 0.0f),
+            colLight * col); // or colMaterial instead of col
 
 //     result.uv = mul(float4(float4(uv, 1.0f), 1.0f), matWorldViewProj);
 
-    float4 f4 = mul(uv, matWorldViewProj);
+//     float4 f4 = mul(uv, matWorldViewProj);
 
+    result.color = col;
     result.uv = uv;
 //     result.uv = f4;
 
