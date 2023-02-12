@@ -4,6 +4,7 @@
 
 #include "include_helper.h"
 #include "DXBaseApp.h"
+#include "BitmapManager.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -69,6 +70,7 @@ private:
     ComPtr<ID3D12Resource> m_constantBuffer;
     SceneConstantBuffer m_constantBufferData;
     UINT8* m_pCbvDataBegin;
+    BitmapManager m_bitmapManager;
 
     // Synchronization objects.
     UINT m_frameIndex;

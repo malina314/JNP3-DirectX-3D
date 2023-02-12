@@ -40,7 +40,7 @@ set(SOURCE_FILES
         src/constants.h src/utils.h src/Input.h src/Singleton.h
         src/BaseWindow.h src/MainWindow.h src/MainWindow.cpp
         src/vertex_shader.h src/pixel_shader.h
-        src/main.cpp src/DXApp.cpp src/DXApp.h src/include_helper.h src/DXBaseApp.cpp src/DXBaseApp.h src/Geometry.h)
+        src/main.cpp src/DXApp.cpp src/DXApp.h src/include_helper.h src/DXBaseApp.cpp src/DXBaseApp.h src/Geometry.h src/BitmapManager.cpp src/BitmapManager.h)
 
 # Shaders compilation (.hlsl)
 add_custom_target(

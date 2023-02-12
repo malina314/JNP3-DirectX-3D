@@ -296,12 +296,15 @@ void DXApp::LoadAssets() {
 
     // Create the texture.
     {
+        // Load texture bitmap
+        utils::ThrowIfFailed(m_bitmapManager.LoadBitmapFromFile(TEXT("assets\\bricks1.png")));
+
         // Describe and create a Texture2D.
         D3D12_RESOURCE_DESC textureDesc = {};
         textureDesc.MipLevels = 1;
         textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        textureDesc.Width = TextureWidth;
-        textureDesc.Height = TextureHeight;
+        textureDesc.Width = m_bitmapManager.width;
+        textureDesc.Height = m_bitmapManager.height;
         textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
         textureDesc.DepthOrArraySize = 1;
         textureDesc.SampleDesc.Count = 1;
@@ -338,12 +341,12 @@ void DXApp::LoadAssets() {
 
         // Copy data to the intermediate upload heap and then schedule a copy
         // from the upload heap to the Texture2D.
-        std::vector<UINT8> texture = GenerateTextureData();
+//        std::vector<UINT8> texture = GenerateTextureData();
 
         D3D12_SUBRESOURCE_DATA textureData = {};
-        textureData.pData = &texture[0];
-        textureData.RowPitch = TextureWidth * TexturePixelSize;
-        textureData.SlicePitch = textureData.RowPitch * TextureHeight;
+        textureData.pData = m_bitmapManager.bitmap;
+        textureData.RowPitch = m_bitmapManager.width * TexturePixelSize;
+        textureData.SlicePitch = textureData.RowPitch * m_bitmapManager.height;
 
         UpdateSubresources(
                 m_commandList.Get(), m_texture.Get(), textureUploadHeap.Get(),
@@ -467,6 +470,7 @@ void DXApp::LoadAssets() {
     }
 }
 
+// todo: remove if not used
 // Generate a simple black and white checkerboard texture.
 std::vector<UINT8> DXApp::GenerateTextureData() {
     const UINT rowPitch = TextureWidth * TexturePixelSize;
@@ -594,6 +598,7 @@ void DXApp::OnUpdate() {
             v_matrix
     );
 
+    m_constantBufferData.colMaterial = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
     m_constantBufferData.colLight = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
     m_constantBufferData.dirLight = DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
 

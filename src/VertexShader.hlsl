@@ -30,12 +30,12 @@ PSInput main(float3 pos : POSITION,
 
     result.color = mul(
             max(-dot(normalize(LW), normalize(NW)), 0.0f),
-            colLight * col); // or colMaterial instead of col
+            colLight * colMaterial); // or colMaterial instead of col
 
-    float dist = distance(result.position.xy, float2(0.0f, 0.0f));
-    result.color *= 1.0f - dist * 0.1f;
+//     float dist = distance(result.position.xy, float2(0.0f, 0.0f));
+//     result.color *= 1.0f - dist * 0.1f;
 
-    result.color += col * 0.1f;
+    result.color += colMaterial * 0.2f;
 
     result.texCoord = texCoord;
 
