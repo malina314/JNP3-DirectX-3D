@@ -533,8 +533,8 @@ public:
     static constexpr Vertex vertices[] =
             {
 //                    TETRAHEDRON
-//                    INSIDE
                     TRIANGLE
+//                    INSIDE
             };
 };
 
