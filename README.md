@@ -4,8 +4,10 @@ Projekt zaliczeniowy DirectX 3D z przedmiotu JNP3.
 
 ## Uruchomienie
 
-TODO
+Projekt posiada standardowy plik CMake. Wystarczy go skompilować i uruchomić.
 
-## Opis wykonania
+## Sterowanie
 
-TODO
+Sterowanie odbywa się za pomocą klawiatury.
+- WSAD - poruszanie się
+- strzałki - obrót kamery
