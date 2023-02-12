@@ -9,7 +9,9 @@ int WINAPI wWinMain(_In_ [[maybe_unused]] HINSTANCE instance,
                     _In_ [[maybe_unused]] INT nCmdShow) {
     MainWindow &mainWindow = Singleton<MainWindow>::getInstance();
 
-    if (!mainWindow.Create(TEXT("DIRECTX 3D FINAL PROJECT"), WS_OVERLAPPEDWINDOW | WS_MAXIMIZE)) {
+    DWORD flags = WS_OVERLAPPEDWINDOW | WS_MAXIMIZE;
+
+    if (!mainWindow.Create(TEXT("DIRECTX 3D FINAL PROJECT"), flags)) {
         return -1;
     }
 

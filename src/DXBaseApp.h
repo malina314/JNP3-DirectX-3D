@@ -17,35 +17,22 @@ public:
 
     virtual void OnDestroy() = 0;
 
-    // Accessors.
-//    UINT GetWidth() const { return m_width; }
-//
-//    UINT GetHeight() const { return m_height; }
-//
-//    const WCHAR *GetTitle() const { return m_title.c_str(); }
-
 protected:
     std::wstring GetAssetFullPath(LPCWSTR assetName);
 
-    void GetHardwareAdapter(
+    static void GetHardwareAdapter(
             _In_ IDXGIFactory1 *pFactory,
             _Outptr_result_maybenull_ IDXGIAdapter1 **ppAdapter,
             bool requestHighPerformanceAdapter = false);
 
     // Viewport dimensions.
+// todo: use it
 //    UINT m_width;
 //    UINT m_height;
-    float m_aspectRatio; // todo: remove if not needed
+    float m_aspectRatio;
 
     // Adapter info.
     bool m_useWarpDevice;
-
-private:
-    // Root assets path.
-    std::wstring m_assetsPath;
-
-    // Window title.
-//    std::wstring m_title;
 };
 
 

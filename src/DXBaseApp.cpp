@@ -1,24 +1,14 @@
 #include "DXBaseApp.h"
 #include "include_helper.h"
-#include "utils.h"
 
 using Microsoft::WRL::ComPtr;
 
 DXBaseApp::DXBaseApp() :
         m_aspectRatio(16.0f / 9.0f),
-        m_useWarpDevice(false) {
-    WCHAR assetsPath[512];
-    utils::GetAssetsPath(assetsPath, _countof(assetsPath));
-    m_assetsPath = assetsPath;
-}
+        m_useWarpDevice(false) {}
 
-// todo: fix this paths XD
-// Helper function for resolving the full path of assets.
-std::wstring DXBaseApp::GetAssetFullPath(LPCWSTR assetName) {
-    return m_assetsPath + L"..\\src\\" + assetName;
-}
-
-// Helper function for acquiring the first available hardware adapter that supports Direct3D 12.
+// Helper function for acquiring the first available hardware adapter that
+// supports Direct3D 12.
 // If no such adapter can be found, *ppAdapter will be set to nullptr.
 _Use_decl_annotations_
 void DXBaseApp::GetHardwareAdapter(
@@ -35,8 +25,9 @@ void DXBaseApp::GetHardwareAdapter(
                 UINT adapterIndex = 0;
                 SUCCEEDED(factory6->EnumAdapterByGpuPreference(
                         adapterIndex,
-                        requestHighPerformanceAdapter == true ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE
-                                                              : DXGI_GPU_PREFERENCE_UNSPECIFIED,
+                        requestHighPerformanceAdapter == true
+                                ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE
+                                : DXGI_GPU_PREFERENCE_UNSPECIFIED,
                         IID_PPV_ARGS(&adapter)));
                 ++adapterIndex) {
             DXGI_ADAPTER_DESC1 desc;
@@ -44,32 +35,40 @@ void DXBaseApp::GetHardwareAdapter(
 
             if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
                 // Don't select the Basic Render Driver adapter.
-                // If you want a software adapter, pass in "/warp" on the command line.
                 continue;
             }
 
-            // Check to see whether the adapter supports Direct3D 12, but don't create the
-            // actual device yet.
-            if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr))) {
+            // Check to see whether the adapter supports Direct3D 12,
+            // but don't create the actual device yet.
+            if (SUCCEEDED(D3D12CreateDevice(adapter.Get(),
+                                            D3D_FEATURE_LEVEL_11_0,
+                                            _uuidof(ID3D12Device),
+                                            nullptr))) {
                 break;
             }
         }
     }
 
     if (adapter.Get() == nullptr) {
-        for (UINT adapterIndex = 0; SUCCEEDED(pFactory->EnumAdapters1(adapterIndex, &adapter)); ++adapterIndex) {
+        for (
+                UINT adapterIndex = 0;
+                SUCCEEDED(pFactory->EnumAdapters1(adapterIndex, &adapter));
+                ++adapterIndex
+        ) {
             DXGI_ADAPTER_DESC1 desc;
             adapter->GetDesc1(&desc);
 
             if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
                 // Don't select the Basic Render Driver adapter.
-                // If you want a software adapter, pass in "/warp" on the command line.
                 continue;
             }
 
-            // Check to see whether the adapter supports Direct3D 12, but don't create the
-            // actual device yet.
-            if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr))) {
+            // Check to see whether the adapter supports Direct3D 12,
+            // but don't create the actual device yet.
+            if (SUCCEEDED(D3D12CreateDevice(adapter.Get(),
+                                            D3D_FEATURE_LEVEL_11_0,
+                                            _uuidof(ID3D12Device),
+                                            nullptr))) {
                 break;
             }
         }
