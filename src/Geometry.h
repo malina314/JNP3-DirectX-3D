@@ -458,8 +458,8 @@ public:
 
         for (int i = 0; i < cnt; ++i) {
             tmp[i] = vertices[i];
-            tmp[i].uv.x = uv[i % 3].x;
-            tmp[i].uv.y = uv[i % 3].y;
+            tmp[i].texCoord.x = uv[i % 3].x;
+            tmp[i].texCoord.y = uv[i % 3].y;
         }
 
         return (Vertex*)tmp;

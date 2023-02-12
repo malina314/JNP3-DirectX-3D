@@ -11,7 +11,7 @@ cbuffer SceneConstantBuffer : register(b0) {
 struct PSInput {
     float4 position : SV_POSITION;
     float4 color : COLOR;
-    float2 uv : TEXCOORD;
+    float2 texCoord : TEXCOORD;
 };
 
 Texture2D g_texture : register(t0);
@@ -20,7 +20,7 @@ SamplerState g_sampler : register(s0);
 PSInput main(float3 pos : POSITION,
              float3 norm : NORMAL,
              float4 col : COLOR,
-             float4 uv : TEXCOORD) {
+             float4 texCoord : TEXCOORD) {
     PSInput result;
 
     float4 LW = dirLight;
@@ -37,7 +37,7 @@ PSInput main(float3 pos : POSITION,
 
     result.color += col * 0.1f;
 
-    result.uv = uv;
+    result.texCoord = texCoord;
 
     return result;
 }
