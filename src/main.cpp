@@ -16,7 +16,7 @@ int WINAPI wWinMain(_In_ [[maybe_unused]] HINSTANCE instance,
     ShowWindow(mainWindow.getHwnd(), nCmdShow);
 
     // todo: uncomment this line
-    // mainWindow.SwitchToFullscreen();
+     mainWindow.SwitchToFullscreen();
 
     // Run the message loop.
     MSG msg = {};

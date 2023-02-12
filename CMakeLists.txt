@@ -24,10 +24,10 @@ if (NOT DX_GI)
     message(FATAL_ERROR "Could not find DXGI")
 endif ()
 
-# Searching for D3DCompiler library (D3DCompiler.lib)
-find_library(D3D_Compiler d3dcompiler)
-if (NOT D3D_Compiler)
-    message(FATAL_ERROR "Could not find D3D_Compiler")
+# Searching for DX_GUID library (dxguid.lib)
+find_library(DX_GUID dxguid)
+if (NOT DX_GUID)
+    message(FATAL_ERROR "Could not find DX_GUID")
 endif ()
 
 # Searching for .hlsl compiler (fxc.exe)
@@ -53,4 +53,4 @@ add_custom_target(
 
 add_executable(DirectX_3D_final_project_exe ${SOURCE_FILES})
 
-target_link_libraries(DirectX_3D_final_project_exe ${D3D_12} ${DX_GI} ${D3D_Compiler})
+target_link_libraries(DirectX_3D_final_project_exe ${D3D_12} ${DX_GI} ${DX_GUID})
