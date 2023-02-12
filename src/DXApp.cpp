@@ -260,7 +260,7 @@ void DXApp::LoadAssets()
     // Create the vertex buffer.
     {
         // Define the geometry for a triangle.
-        auto triangleVertices = Geometry::vertices;
+        auto triangleVertices = Geometry::GetVertices();
 
         const UINT vertexBufferSize = Geometry::GetVerticesSize();
 
