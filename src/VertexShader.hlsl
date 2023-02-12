@@ -31,10 +31,10 @@ PSInput main(float3 pos : POSITION,
     float4 NW = float4(norm, 0.0f);
     float4 LW = mul(dirLight, matView);
 
-    result.position = float4(pos, 1.0f);
+//     result.position = float4(pos, 1.0f);
 //     result.position += float4(0.0f, 0.5f, 0.0f, 0.0f);
-    result.position += matWorldViewProj[0];
-//     result.position = mul(float4(pos, 1.0f), matWorldViewProj);
+//     result.position += matWorldViewProj[0];
+    result.position = mul(float4(pos, 1.0f), matWorldViewProj);
 
 // this breaks project compilation
     result.color = mul(
