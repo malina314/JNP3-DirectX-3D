@@ -562,7 +562,6 @@ std::vector<UINT8> DXApp::GenerateTextureData() {
 // Update frame-based values.
 void DXApp::OnUpdate() {
     DirectX::XMMATRIX wvp_matrix = DirectX::XMMatrixIdentity();
-    DirectX::XMMATRIX wv_matrix = DirectX::XMMatrixIdentity();
     DirectX::XMMATRIX v_matrix = DirectX::XMMatrixIdentity();
     Input &input = Singleton<Input>::getInstance();
 
@@ -621,21 +620,20 @@ void DXApp::OnUpdate() {
     );
 
     // translation
-    wv_matrix = XMMatrixMultiply(
+    v_matrix = XMMatrixMultiply(
             v_matrix,
             DirectX::XMMatrixTranslationFromVector(translation)
     );
 
     // projection
     wvp_matrix = XMMatrixMultiply(
-            wv_matrix,
+            v_matrix,
             DirectX::XMMatrixPerspectiveFovLH(
                     45.0f, m_aspectRatio, 0.1f, 100.0f
             )
     );
 
     v_matrix = XMMatrixTranspose(v_matrix);
-    wv_matrix = XMMatrixTranspose(wv_matrix);
     wvp_matrix = XMMatrixTranspose(wvp_matrix);
 
     XMStoreFloat4x4(
@@ -644,18 +642,17 @@ void DXApp::OnUpdate() {
     );
 
     XMStoreFloat4x4(
-            &m_constantBufferData.matWorldView,
-            wv_matrix
-    );
-
-    XMStoreFloat4x4(
             &m_constantBufferData.matView,
             v_matrix
     );
 
     m_constantBufferData.colMaterial = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-    m_constantBufferData.colLight = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-    m_constantBufferData.dirLight = DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
+
+    m_constantBufferData.colLight1 = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+    m_constantBufferData.dirLight1 = DirectX::XMFLOAT4(-2.0f, -6.0f, -4.0f, 1.0f);
+
+    m_constantBufferData.colLight2 = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+    m_constantBufferData.dirLight2 = DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
 
     memcpy(m_pCbvDataBegin, &m_constantBufferData, sizeof(m_constantBufferData));
 

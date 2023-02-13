@@ -2,3 +2,4 @@
 cmake-build-*/
 assets-dev/
 *.exe
+*.zip

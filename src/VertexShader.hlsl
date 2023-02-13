@@ -1,11 +1,12 @@
 cbuffer SceneConstantBuffer : register(b0) {
     float4x4 matWorldViewProj;
-    float4x4 matWorldView;
     float4x4 matView;
     float4 colMaterial;
-    float4 colLight;
-    float4 dirLight;
-    float4 padding;
+    float4 colLight1;
+    float4 dirLight1;
+    float4 colLight2;
+    float4 dirLight2;
+    float4 padding[3];
 };
 
 struct PSInput {
@@ -30,13 +31,21 @@ PSInput main(float3 pos : POSITION,
 
     result.position = mul(float4(pos, 1.0f), matWorldViewProj);
 
-    float4 LW = dirLight;
     float4 NW = mul(float4(norm, 0.0f), matView);
+
+//     float4 LW = dirLight1;
+    float4 LW1 = mul(dirLight1, matView);
 
     // Flashlight diffuse
     result.color = mul(
-            max(-dot(normalize(LW), normalize(NW)), 0.0f),
-            colLight * colMaterial);
+            max(-dot(normalize(LW1), normalize(NW)), 0.0f),
+            colLight1 * colMaterial) * 0.4f;
+
+    float4 LW2 = dirLight2;
+
+    result.color += mul(
+            max(-dot(normalize(LW2), normalize(NW)), 0.0f),
+            colLight2 * colMaterial) * 0.6f;
 
     // Flashlight circle
 //     float flashLightStrength = 2.0f;
@@ -59,7 +68,7 @@ PSInput main(float3 pos : POSITION,
 //     result.color *= factor * factorZ * flashLightStrength;
 
     // Global light
-    result.color += float4(1.0f, 1.0f, 1.0f, 1.0f) * 0.3f;
+    result.color += float4(1.0f, 1.0f, 1.0f, 1.0f) * 0.15f;
 
     result.texCoord = texCoord;
 

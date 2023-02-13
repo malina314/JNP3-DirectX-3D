@@ -29,12 +29,13 @@ public:
     struct SceneConstantBuffer
     {
         DirectX::XMFLOAT4X4 matWorldViewProj;
-        DirectX::XMFLOAT4X4 matWorldView;
         DirectX::XMFLOAT4X4 matView;
         DirectX::XMFLOAT4 colMaterial;
-        DirectX::XMFLOAT4 colLight;
-        DirectX::XMFLOAT4 dirLight;
-        DirectX::XMFLOAT4 padding; // Padding so the constant buffer is 256-byte aligned.
+        DirectX::XMFLOAT4 colLight1;
+        DirectX::XMFLOAT4 dirLight1;
+        DirectX::XMFLOAT4 colLight2;
+        DirectX::XMFLOAT4 dirLight2;
+        DirectX::XMFLOAT4 padding[3]; // Padding so the constant buffer is 256-byte aligned.
     };
     static_assert((sizeof(SceneConstantBuffer) % 256) == 0, "Constant Buffer size must be 256-byte aligned");
 
