@@ -53,6 +53,6 @@ add_custom_target(
         VERBATIM
 )
 
-add_executable(DirectX_3D_final_project_exe ${SOURCE_FILES})
+add_executable(labyrinth ${SOURCE_FILES})
 
-target_link_libraries(DirectX_3D_final_project_exe ${D3D_12} ${DX_GI} ${DX_GUID})
+target_link_libraries(labyrinth ${D3D_12} ${DX_GI} ${DX_GUID})
