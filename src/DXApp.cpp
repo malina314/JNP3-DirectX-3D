@@ -512,12 +512,13 @@ void DXApp::OnUpdate() {
 
     static float angleV = 0.0f;
     static float angleH = 0.0f;
-    static DirectX::XMVECTOR position = DirectX::XMVectorSet(0.0f, 0.0f, 3.0f, 0.0f);
+    static DirectX::XMVECTOR position = DirectX::XMVectorSet(-7.5f, 0.0f, -0.5f, 0.0f);
 
     float movX = 0.0f;
     float movZ = 0.0f;
 
     const float rotationSpeed = 0.02f;
+    const float movementSpeed = 0.02f;
 
     // input for rotations
     if (input.isKeyPressed(Key::ROT_UP)) {
@@ -533,14 +534,14 @@ void DXApp::OnUpdate() {
 
     // input for position
     if (input.isKeyPressed(Key::MOV_FORWARD)) {
-        movZ -= 0.1f;
+        movZ -= movementSpeed;
     } else if (input.isKeyPressed(Key::MOV_BACKWARD)) {
-        movZ += 0.1f;
+        movZ += movementSpeed;
     }
     if (input.isKeyPressed(Key::MOV_LEFT)) {
-        movX += 0.1f;
+        movX += movementSpeed;
     } else if (input.isKeyPressed(Key::MOV_RIGHT)) {
-        movX -= 0.1f;
+        movX -= movementSpeed;
     }
 
     DirectX::XMMATRIX rotations = XMMatrixMultiply(
