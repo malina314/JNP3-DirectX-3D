@@ -55,7 +55,7 @@ class Geometry {
         float w = W / (float) steps_horizontal;
         float h = H / (float) steps_vertical;
         float tex_h = 1.0f * h / wall_h * wall_tex_begin;
-        float tex_w = tex_h * 3200.0f / 2159.0f;
+        float tex_w = tex_h * 3200.0f / 2159.0f * w;
 
         for (int i = 0; i < steps_vertical; ++i) {
             for (int j = 0; j < steps_horizontal; ++j) {
@@ -72,7 +72,7 @@ class Geometry {
         float w = W / (float) steps_horizontal;
         float h = H / (float) steps_vertical;
         float tex_h = 1.0f * h / wall_h * wall_tex_begin;
-        float tex_w = tex_h * 3200.0f / 2159.0f;
+        float tex_w = tex_h * 3200.0f / 2159.0f * w;
 
         for (int i = 0; i < steps_vertical; ++i) {
             for (int j = 0; j < steps_horizontal; ++j) {
