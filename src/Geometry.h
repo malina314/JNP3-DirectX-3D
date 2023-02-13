@@ -21,8 +21,7 @@ class Geometry {
     float ref_w = 4.0f;
     float wall_h = 3.0f;
     float wall_y_start = -1.0f;
-    float tex_h = 1.0f * ref_h / wall_h;
-    float tex_w = tex_h * 3200.0f / 2159.0f;
+    float wall_tex_begin = 2159.0f / 5359.0f;
     float wall_thickness_half = 0.1f;
 
     void add_rect_xy(float x, float y, float z, float w, float h,
@@ -54,12 +53,14 @@ class Geometry {
         int steps_vertical = (int) (H / ref_h) + 1;
         float w = W / (float) steps_horizontal;
         float h = H / (float) steps_vertical;
+        float tex_h = 1.0f * h / wall_h * wall_tex_begin;
+        float tex_w = tex_h * 3200.0f / 2159.0f;
 
         for (int i = 0; i < steps_vertical; ++i) {
             for (int j = 0; j < steps_horizontal; ++j) {
                 add_rect_xy(x + (float) j * w, y + (float) i * h, z, w, h,
                             normal,
-                            tex_w * (float) j, 1.0f - tex_h * (float) i, tex_w, tex_h);
+                            tex_w * (float) j, wall_tex_begin - tex_h * (float) i, tex_w, tex_h);
             }
         }
     }
@@ -69,12 +70,14 @@ class Geometry {
         int steps_vertical = (int) (H / ref_h) + 1;
         float w = W / (float) steps_horizontal;
         float h = H / (float) steps_vertical;
+        float tex_h = 1.0f * h / wall_h * wall_tex_begin;
+        float tex_w = tex_h * 3200.0f / 2159.0f;
 
         for (int i = 0; i < steps_vertical; ++i) {
             for (int j = 0; j < steps_horizontal; ++j) {
                 add_rect_zy(x, y + (float) i * h, z + (float) j * w, w, h,
                             normal,
-                            tex_w * (float) j, 1.0f - tex_h * (float) i, tex_w, tex_h);
+                            tex_w * (float) j, wall_tex_begin - tex_h * (float) i, tex_w, tex_h);
             }
         }
     }
@@ -91,6 +94,52 @@ class Geometry {
         add_wall_z(x - wall_thickness_half, wall_y_start, z, W, wall_h, {-1.0f, 0.0f, 0.0f});
         add_wall_x(x - wall_thickness_half, wall_y_start, z, 2 * wall_thickness_half, wall_h, {0.0f, 0.0f, -1.0f});
         add_wall_x(x - wall_thickness_half, wall_y_start, z + W, 2 * wall_thickness_half, wall_h, {0.0f, 0.0f, 1.0f});
+    }
+
+    void add_floor() {
+        float step = 1.0f;
+        float tex_h = wall_tex_begin;
+        float tex_w = 12.0f / (1 - wall_tex_begin);
+
+        for (int i = -1; i < 11; ++i) {
+            vertices.push_back({
+                {-1.0f, wall_y_start, step * (float) i},
+                {0.0f, 1.0f, 0.0f},
+                {},
+                {0.0f, 1.0f}
+            });
+            vertices.push_back(
+                 {{11.0f, wall_y_start, step * (float) (i + 1)},
+                 {0.0f, 1.0f, 0.0f},
+                 {},
+                 {tex_w, tex_h}
+            });
+            vertices.push_back(
+                 {{11.0f, wall_y_start, step * (float) i},
+                 {0.0f, 1.0f, 0.0f},
+                 {},
+                 {tex_w, 1.0f}
+            });
+
+          vertices.push_back({
+                {-1.0f, wall_y_start, step * (float) i},
+                {0.0f, 1.0f, 0.0f},
+                {},
+                {0.0f, 1.0f}
+            });
+            vertices.push_back(
+                 {{-1.0f, wall_y_start, step * (float) (i + 1)},
+                 {0.0f, 1.0f, 0.0f},
+                 {},
+                 {0.0f, tex_h}
+            });
+            vertices.push_back(
+                 {{11.0f, wall_y_start, step * (float) (i + 1)},
+                 {0.0f, 1.0f, 0.0f},
+                 {},
+                 {tex_w, tex_h}
+            });
+        }
     }
 
 public:
@@ -144,6 +193,8 @@ public:
         add_labyrinth_wall_z(9.0f, 1.0f, 3.0f);
         add_labyrinth_wall_z(9.0f, 5.0f, 3.0f);
         add_labyrinth_wall_z(10.0f, 0.0f, 10.0f);
+
+        add_floor();
     }
 
     Vertex *GetVertices() {

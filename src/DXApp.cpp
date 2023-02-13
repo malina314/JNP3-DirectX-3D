@@ -346,7 +346,7 @@ void DXApp::LoadAssets() {
     // Create the texture.
     {
         // Load texture bitmap
-        utils::ThrowIfFailed(m_bitmapManager.LoadBitmapFromFile(TEXT("assets\\bricks1.png")));
+        utils::ThrowIfFailed(m_bitmapManager.LoadBitmapFromFile(TEXT("assets\\textures.png")));
 
         // Describe and create a Texture2D.
         D3D12_RESOURCE_DESC textureDesc = {};
