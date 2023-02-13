@@ -45,6 +45,8 @@ private:
     static const UINT TextureHeight = 256;
     static const UINT TexturePixelSize = 4;    // The number of bytes used to represent a pixel in the texture.
 
+    UINT m_verticesCount;
+
     // Pipeline objects.
     CD3DX12_VIEWPORT m_viewport;
     CD3DX12_RECT m_scissorRect;
@@ -80,7 +82,7 @@ private:
 
     void LoadPipeline();
     void LoadAssets();
-    static std::vector<UINT8> GenerateTextureData();
+    static std::vector<UINT8> GenerateTextureData(); // todo: remove if unused
     void PopulateCommandList();
     void WaitForPreviousFrame();
 };

@@ -434,41 +434,44 @@ using Vertex = DXApp::Vertex;
 {{8.0f,  3.0f, -8.0f},  {0.0f, -1.0f, 0.0f},  {0.7f, 0.7f, 0.7f, 1.0f}}, \
 {{8.0f,  3.0f, 8.0f},  {0.0f, -1.0f, 0.0f},  {0.7f, 0.7f, 0.7f, 1.0f}}, \
 
+#include <vector>
+
 class Geometry {
+    std::vector<Vertex> vertices;
+
+    void add_rect_xy(float x, float y, float z, float w, float h, DirectX::XMFLOAT3 normal) {
+        vertices.push_back({{x, y, z}, normal, {}, {}});
+        vertices.push_back({{x + w, y + h, z}, normal, {}, {}});
+        vertices.push_back({{x + w, y, z}, normal, {}, {}});
+
+        vertices.push_back({{x, y + h, z}, normal, {}, {}});
+        vertices.push_back({{x + w, y + h, z}, normal, {}, {}});
+        vertices.push_back({{x, y, z}, normal, {}, {}});
+    }
+
 public:
-    static constexpr int GetVerticesCount() {
-        return sizeof(vertices) / sizeof(Vertex);
-    }
+    Geometry() {
+        float w = 0.2f;
+        float h = 0.2f;
 
-    static constexpr int GetVerticesSize() {
-        return sizeof(vertices);
-    }
-
-    static Vertex* GetVertices() {
-        constexpr int cnt = GetVerticesCount();
-        static Vertex tmp[cnt];
-
-        struct {
-            float x, y;
-        } uv[] = {
-                { 0.5f, 0.0f },
-                { 1.0f, 1.0f },
-                { 0.0f, 1.0f }
-        };
-
-        for (int i = 0; i < cnt; ++i) {
-            tmp[i] = vertices[i];
-            tmp[i].texCoord.x = uv[i % 3].x;
-            tmp[i].texCoord.y = uv[i % 3].y;
+        for (float i = 0.0f; i < 5.0f; i += h) {
+            for (float j = 0.0f; j < 10.0f; j += w) {
+                add_rect_xy(-8.0f + j, -3.0f + i, 8.0f, w, h, {0.0f, 0.0f, -1.0f});
+            }
         }
-
-        return (Vertex*)tmp;
     }
 
-    static constexpr Vertex vertices[] =
-            {
-                    INSIDE
-            };
+    Vertex *GetVertices() {
+        return vertices.data();
+    }
+
+    int GetVerticesCount() {
+        return vertices.size();
+    }
+
+    int GetVerticesSize() {
+        return GetVerticesCount() * sizeof(Vertex);
+    }
 };
 
 #undef NF

@@ -259,10 +259,12 @@ void DXApp::LoadAssets() {
 
     // Create the vertex buffer.
     {
-        // Define the geometry for a triangle.
-        auto triangleVertices = Geometry::GetVertices();
+        Geometry geometry; // Default constructor creates a triangle.
 
-        const UINT vertexBufferSize = Geometry::GetVerticesSize();
+        // Define the geometry for a triangle.
+        Vertex *triangleVertices = geometry.GetVertices();
+        const UINT vertexBufferSize = geometry.GetVerticesSize();
+        m_verticesCount = geometry.GetVerticesCount();
 
         {
             auto tmp1 = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
@@ -685,7 +687,7 @@ void DXApp::PopulateCommandList() {
     );
     m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-    m_commandList->DrawInstanced(Geometry::GetVerticesCount(), 1, 0, 0);
+    m_commandList->DrawInstanced(m_verticesCount, 1, 0, 0);
 
     // Indicate that the back buffer will now be used to present.
     {
