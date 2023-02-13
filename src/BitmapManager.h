@@ -15,7 +15,11 @@ public:
     UINT height;
 
     BitmapManager() {
-        utils::ThrowIfFailed(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE));
+        utils::ThrowIfFailed(
+                CoInitializeEx(
+                        NULL,
+                        COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE
+        ));
         utils::ThrowIfFailed(CoCreateInstance(
                 CLSID_WICImagingFactory,
                 NULL,

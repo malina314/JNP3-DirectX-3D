@@ -7,13 +7,6 @@
 
 using Vertex = DXApp::Vertex;
 
-#define NF {0.0f, 0.0f, -1.0f}
-#define NB {0.0f, 0.0f, 1.0f}
-#define NL {1.0f, 0.0f, 0.0f}
-#define NR {-1.0f, 0.0f, 0.0f}
-#define NU {0.0f, -1.0f, 0.0f}
-#define ND {0.0f, 1.0f, 0.0f}
-
 class Geometry {
     std::vector<Vertex> vertices;
 
@@ -59,9 +52,11 @@ class Geometry {
 
         for (int i = 0; i < steps_vertical; ++i) {
             for (int j = 0; j < steps_horizontal; ++j) {
-                add_rect_xy(x + (float) j * w, y + (float) i * h, z, w, h,
-                            normal,
-                            tex_w * (float) j, wall_tex_begin - tex_h * (float) i, tex_w, tex_h);
+                add_rect_xy(
+                        x + (float) j * w, y + (float) i * h, z, w, h,
+                        normal,
+                        tex_w * (float) j, wall_tex_begin - tex_h * (float) i, tex_w, tex_h
+                );
             }
         }
     }
@@ -76,34 +71,43 @@ class Geometry {
 
         for (int i = 0; i < steps_vertical; ++i) {
             for (int j = 0; j < steps_horizontal; ++j) {
-                add_rect_zy(x, y + (float) i * h, z + (float) j * w, w, h,
-                            normal,
-                            tex_w * (float) j, wall_tex_begin - tex_h * (float) i, tex_w, tex_h);
+                add_rect_zy(
+                        x, y + (float) i * h, z + (float) j * w, w, h,
+                        normal,
+                        tex_w * (float) j, wall_tex_begin - tex_h * (float) i, tex_w, tex_h
+                );
             }
         }
     }
 
     void add_labyrinth_wall_x(float x, float z, float W) {
-        add_wall_x(x - wall_thickness_half, wall_y_start, z + wall_thickness_half, W + 2 * wall_thickness_half, wall_h,
+        add_wall_x(x - wall_thickness_half, wall_y_start, z + wall_thickness_half,
+                   W + 2 * wall_thickness_half, wall_h,
                    {0.0f, 0.0f,  1.0f});
-        add_wall_x(x - wall_thickness_half, wall_y_start, z - wall_thickness_half, W + 2 * wall_thickness_half, wall_h,
+        add_wall_x(x - wall_thickness_half, wall_y_start, z - wall_thickness_half,
+                   W + 2 * wall_thickness_half, wall_h,
                    {0.0f, 0.0f, -1.0f});
-        add_wall_z(x - wall_thickness_half + eps, wall_y_start, z - wall_thickness_half, 2 * wall_thickness_half,
-                   wall_h,
+        add_wall_z(x - wall_thickness_half + eps, wall_y_start, z - wall_thickness_half,
+                   2 * wall_thickness_half, wall_h,
                    {-1.0f, 0.0f, 0.0f});
-        add_wall_z(x + W + wall_thickness_half - eps, wall_y_start, z - wall_thickness_half, 2 * wall_thickness_half,
+        add_wall_z(x + W + wall_thickness_half - eps, wall_y_start, z - wall_thickness_half,
+                   2 * wall_thickness_half,
                    wall_h, {1.0f, 0.0f, 0.0f});
     }
 
     void add_labyrinth_wall_z(float x, float z, float W) {
-        add_wall_z(x + wall_thickness_half, wall_y_start, z - wall_thickness_half, W + 2 * wall_thickness_half, wall_h,
+        add_wall_z(x + wall_thickness_half, wall_y_start, z - wall_thickness_half,
+                   W + 2 * wall_thickness_half, wall_h,
                    { 1.0f, 0.0f, 0.0f});
-        add_wall_z(x - wall_thickness_half, wall_y_start, z - wall_thickness_half, W + 2 * wall_thickness_half, wall_h,
+        add_wall_z(x - wall_thickness_half, wall_y_start, z - wall_thickness_half,
+                   W + 2 * wall_thickness_half, wall_h,
                    {-1.0f, 0.0f, 0.0f});
-        add_wall_x(x - wall_thickness_half, wall_y_start, z - wall_thickness_half + eps, 2 * wall_thickness_half, wall_h,
+        add_wall_x(x - wall_thickness_half, wall_y_start, z - wall_thickness_half + eps,
+                   2 * wall_thickness_half, wall_h,
                    {0.0f, 0.0f, -1.0f});
-        add_wall_x(x - wall_thickness_half, wall_y_start, z + W + wall_thickness_half - eps, 2 * wall_thickness_half,
-                   wall_h, {0.0f, 0.0f, 1.0f});
+        add_wall_x(x - wall_thickness_half, wall_y_start, z + W + wall_thickness_half - eps,
+                   2 * wall_thickness_half, wall_h,
+                   {0.0f, 0.0f, 1.0f});
     }
 
     void add_floor() {
@@ -219,13 +223,6 @@ public:
         return GetVerticesCount() * sizeof(Vertex);
     }
 };
-
-#undef NF
-#undef NB
-#undef NL
-#undef NR
-#undef NU
-#undef ND
 
 
 #endif //DIRECTX_3D_FINAL_PROJECT_GEOMETRY_H

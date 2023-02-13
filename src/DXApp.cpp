@@ -177,8 +177,6 @@ void DXApp::LoadAssets() {
 
         D3D12_STATIC_SAMPLER_DESC sampler = {};
         sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-        // todo: remove this
-//        sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
         sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
         sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
         sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -220,10 +218,14 @@ void DXApp::LoadAssets() {
         // Define the vertex input layout.
         // This should be consistent with the Vertex struct in DXApp.h.
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
-    {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-    {"NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-    {"COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-    {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 40, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+            {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,
+                            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+            {"NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 12,
+                            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+            {"COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24,
+                            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+            {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 40,
+                            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
         };
 
         CD3DX12_RASTERIZER_DESC rasterizerStateDesc(D3D12_DEFAULT);
@@ -312,29 +314,6 @@ void DXApp::LoadAssets() {
             m_commandList->ResourceBarrier(1, &tmp1);
         }
 
-//         todo: remove
-//        {
-//            auto tmp1 = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-//            auto tmp2 = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
-//
-//            utils::ThrowIfFailed(m_device->CreateCommittedResource(
-//                    &tmp1,
-//                    D3D12_HEAP_FLAG_NONE,
-//                    &tmp2,
-//                    D3D12_RESOURCE_STATE_GENERIC_READ,
-//                    nullptr,
-//                    IID_PPV_ARGS(&m_vertexBuffer)));
-//        }
-//
-//        // Copy the triangle data to the vertex buffer.
-//        UINT8 *pVertexDataBegin;
-//        CD3DX12_RANGE readRange(0, 0);
-//        utils::ThrowIfFailed(m_vertexBuffer->Map(
-//                0, &readRange, reinterpret_cast<void **>(&pVertexDataBegin))
-//        );
-//        memcpy(pVertexDataBegin, triangleVertices, vertexBufferSize);
-//        m_vertexBuffer->Unmap(0, nullptr);
-
         // Initialize the vertex buffer view.
         m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
         m_vertexBufferView.StrideInBytes = sizeof(Vertex);
@@ -346,7 +325,9 @@ void DXApp::LoadAssets() {
     // Create the texture.
     {
         // Load texture bitmap
-        utils::ThrowIfFailed(m_bitmapManager.LoadBitmapFromFile(TEXT("assets\\textures.png")));
+        utils::ThrowIfFailed(
+                m_bitmapManager.LoadBitmapFromFile(TEXT("assets\\textures.png"))
+        );
 
         // Describe and create a Texture2D.
         D3D12_RESOURCE_DESC textureDesc = {};
@@ -524,41 +505,6 @@ void DXApp::LoadAssets() {
     }
 }
 
-// todo: remove if not used
-// Generate a simple black and white checkerboard texture.
-std::vector<UINT8> DXApp::GenerateTextureData() {
-    const UINT rowPitch = TextureWidth * TexturePixelSize;
-    // The width of a cell in the checkboard texture.
-    const UINT cellPitch = rowPitch >> 3;
-    // The height of a cell in the checkerboard texture.
-    const UINT cellHeight = TextureWidth >> 3;
-    const UINT textureSize = rowPitch * TextureHeight;
-
-    std::vector<UINT8> data(textureSize);
-    UINT8 *pData = &data[0];
-
-    for (UINT n = 0; n < textureSize; n += TexturePixelSize) {
-        UINT x = n % rowPitch;
-        UINT y = n / rowPitch;
-        UINT i = x / cellPitch;
-        UINT j = y / cellHeight;
-
-        if (i % 2 == j % 2) {
-            pData[n] = 0x00;        // R
-            pData[n + 1] = 0x00;    // G
-            pData[n + 2] = 0x00;    // B
-            pData[n + 3] = 0xff;    // A
-        } else {
-            pData[n] = 0xff;        // R
-            pData[n + 1] = 0xff;    // G
-            pData[n + 2] = 0xff;    // B
-            pData[n + 3] = 0xff;    // A
-        }
-    }
-
-    return data;
-}
-
 // Update frame-based values.
 void DXApp::OnUpdate() {
     DirectX::XMMATRIX wvp_matrix = DirectX::XMMatrixIdentity();
@@ -724,7 +670,9 @@ void DXApp::PopulateCommandList() {
             (int) m_frameIndex,
             m_rtvDescriptorSize
     );
-    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+    CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(
+            m_dsvHeap->GetCPUDescriptorHandleForHeapStart()
+    );
 
     m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
@@ -756,10 +704,14 @@ void DXApp::PopulateCommandList() {
 void DXApp::WaitForGpu()
 {
     // Schedule a Signal command in the queue.
-    utils::ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_frameIndex]));
+    utils::ThrowIfFailed(
+            m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_frameIndex])
+    );
 
     // Wait until the fence has been processed.
-    utils::ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent));
+    utils::ThrowIfFailed(
+            m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent)
+    );
     WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
 
     // Increment the fence value for the current frame.
@@ -779,7 +731,9 @@ void DXApp::MoveToNextFrame()
     // If the next frame is not ready to be rendered yet, wait until it is ready.
     if (m_fence->GetCompletedValue() < m_fenceValues[m_frameIndex])
     {
-        utils::ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent));
+        utils::ThrowIfFailed(
+                m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent)
+        );
         WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
     }
 

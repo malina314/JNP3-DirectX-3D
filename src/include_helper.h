@@ -21,8 +21,8 @@
 
 #include <wrl.h>
 
-// Assign a name to the object to aid with debugging.
 #if defined(_DEBUG) || defined(DBG)
+// Assign a name to the object to aid with debugging.
 inline void SetName(ID3D12Object* pObject, LPCWSTR name)
 {
     pObject->SetName(name);

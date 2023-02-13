@@ -18,17 +18,12 @@ public:
     virtual void OnDestroy() = 0;
 
 protected:
-    std::wstring GetAssetFullPath(LPCWSTR assetName);
-
     static void GetHardwareAdapter(
             _In_ IDXGIFactory1 *pFactory,
             _Outptr_result_maybenull_ IDXGIAdapter1 **ppAdapter,
             bool requestHighPerformanceAdapter = false);
 
     // Viewport dimensions.
-// todo: use it
-//    UINT m_width;
-//    UINT m_height;
     float m_aspectRatio;
 
     // Adapter info.

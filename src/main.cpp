@@ -1,7 +1,6 @@
 #include "include_helper.h"
 #include "MainWindow.h"
 #include "Singleton.h"
-#include "constants.h"
 
 int WINAPI wWinMain(_In_ [[maybe_unused]] HINSTANCE instance,
                     _In_opt_ [[maybe_unused]] HINSTANCE prevInstance,
@@ -17,7 +16,6 @@ int WINAPI wWinMain(_In_ [[maybe_unused]] HINSTANCE instance,
 
     ShowWindow(mainWindow.getHwnd(), nCmdShow);
 
-    // todo: uncomment this line
      mainWindow.SwitchToFullscreen();
 
     // Run the message loop.

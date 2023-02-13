@@ -13,10 +13,10 @@ class DXApp : public DXBaseApp
 public:
     DXApp();
 
-    virtual void OnInit();
-    virtual void OnUpdate();
-    virtual void OnRender();
-    virtual void OnDestroy();
+    virtual void OnInit() override;
+    virtual void OnUpdate() override;
+    virtual void OnRender() override;
+    virtual void OnDestroy() override;
 
     struct Vertex
     {
@@ -35,17 +35,17 @@ public:
         DirectX::XMFLOAT4 dirLight1;
         DirectX::XMFLOAT4 colLight2;
         DirectX::XMFLOAT4 dirLight2;
-        DirectX::XMFLOAT4 padding[3]; // Padding so the constant buffer is 256-byte aligned.
+        DirectX::XMFLOAT4 padding[3];
     };
-    static_assert((sizeof(SceneConstantBuffer) % 256) == 0, "Constant Buffer size must be 256-byte aligned");
+    static_assert((sizeof(SceneConstantBuffer) % 256) == 0,
+            "Constant Buffer size must be 256-byte aligned");
 
 
 private:
     static const UINT FrameCount = 2;
-    static const UINT TextureWidth = 256;
-    static const UINT TextureHeight = 256;
-    static const UINT TexturePixelSize = 4;    // The number of bytes used to represent a pixel in the texture.
 
+    // The number of bytes used to represent a pixel in the texture.
+    const UINT TexturePixelSize = 4;
     UINT m_verticesCount;
 
     // Pipeline objects.
@@ -83,7 +83,6 @@ private:
 
     void LoadPipeline();
     void LoadAssets();
-    static std::vector<UINT8> GenerateTextureData(); // todo: remove if unused
     void PopulateCommandList();
     void WaitForGpu();
     void MoveToNextFrame();
