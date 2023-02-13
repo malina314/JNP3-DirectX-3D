@@ -133,13 +133,14 @@ void DXApp::LoadPipeline() {
             utils::ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
             m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
             rtvHandle.Offset(1, m_rtvDescriptorSize);
+
+            utils::ThrowIfFailed(
+                    m_device->CreateCommandAllocator(
+                            D3D12_COMMAND_LIST_TYPE_DIRECT,
+                            IID_PPV_ARGS(&m_commandAllocators[n])
+            ));
         }
     }
-
-    utils::ThrowIfFailed(
-            m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
-                                             IID_PPV_ARGS(&m_commandAllocator))
-     );
 }
 
 // Load the sample assets.
@@ -251,7 +252,8 @@ void DXApp::LoadAssets() {
     // Create the command list.
     utils::ThrowIfFailed(
             m_device->CreateCommandList(
-                    0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(),
+                    0, D3D12_COMMAND_LIST_TYPE_DIRECT,
+                    m_commandAllocators[m_frameIndex].Get(),
                     m_pipelineState.Get(), IID_PPV_ARGS(&m_commandList)
     ));
 
@@ -503,8 +505,13 @@ void DXApp::LoadAssets() {
 
     // Create synchronization objects and wait until assets have been uploaded to the GPU.
     {
-        utils::ThrowIfFailed(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
-        m_fenceValue = 1;
+        utils::ThrowIfFailed(
+                m_device->CreateFence(
+                        m_fenceValues[m_frameIndex],
+                        D3D12_FENCE_FLAG_NONE,
+                        IID_PPV_ARGS(&m_fence)
+        ));
+        m_fenceValues[m_frameIndex]++;
 
         // Create an event handle to use for frame synchronization.
         m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -513,7 +520,7 @@ void DXApp::LoadAssets() {
         }
 
         // Wait for the command list to execute.
-        WaitForPreviousFrame();
+        WaitForGpu();
     }
 }
 
@@ -667,21 +674,21 @@ void DXApp::OnRender() {
     // Present the frame.
     utils::ThrowIfFailed(m_swapChain->Present(1, 0));
 
-    WaitForPreviousFrame();
+    MoveToNextFrame();
 }
 
 void DXApp::OnDestroy() {
     // Ensure that the GPU is no longer referencing resources that are about to be
     // cleaned up by the destructor.
-    WaitForPreviousFrame();
+    WaitForGpu();
 
     CloseHandle(m_fenceEvent);
 }
 
 void DXApp::PopulateCommandList() {
-    utils::ThrowIfFailed(m_commandAllocator->Reset());
+    utils::ThrowIfFailed(m_commandAllocators[m_frameIndex]->Reset());
 
-    utils::ThrowIfFailed(m_commandList->Reset(m_commandAllocator.Get(),
+    utils::ThrowIfFailed(m_commandList->Reset(m_commandAllocators[m_frameIndex].Get(),
                                               m_pipelineState.Get()));
 
     // Set necessary state.
@@ -748,17 +755,37 @@ void DXApp::PopulateCommandList() {
     utils::ThrowIfFailed(m_commandList->Close());
 }
 
-void DXApp::WaitForPreviousFrame() {
-    // Signal and increment the fence value.
-    const UINT64 fence = m_fenceValue;
-    utils::ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), fence));
-    m_fenceValue++;
+// Wait for pending GPU work to complete.
+void DXApp::WaitForGpu()
+{
+    // Schedule a Signal command in the queue.
+    utils::ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_frameIndex]));
 
-    // Wait until the previous frame is finished.
-    if (m_fence->GetCompletedValue() < fence) {
-        utils::ThrowIfFailed(m_fence->SetEventOnCompletion(fence, m_fenceEvent));
-        WaitForSingleObject(m_fenceEvent, INFINITE);
+    // Wait until the fence has been processed.
+    utils::ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent));
+    WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
+
+    // Increment the fence value for the current frame.
+    m_fenceValues[m_frameIndex]++;
+}
+
+// Prepare to render the next frame.
+void DXApp::MoveToNextFrame()
+{
+    // Schedule a Signal command in the queue.
+    const UINT64 currentFenceValue = m_fenceValues[m_frameIndex];
+    utils::ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), currentFenceValue));
+
+    // Update the frame index.
+    m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+
+    // If the next frame is not ready to be rendered yet, wait until it is ready.
+    if (m_fence->GetCompletedValue() < m_fenceValues[m_frameIndex])
+    {
+        utils::ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent));
+        WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
     }
 
-    m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+    // Set the fence value for the next frame.
+    m_fenceValues[m_frameIndex] = currentFenceValue + 1;
 }
