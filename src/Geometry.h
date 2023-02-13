@@ -23,6 +23,7 @@ class Geometry {
     float wall_y_start = -1.0f;
     float wall_tex_begin = 2159.0f / 5359.0f;
     float wall_thickness_half = 0.1f;
+    float eps = 0.0001f;
 
     void add_rect_xy(float x, float y, float z, float w, float h,
                      DirectX::XMFLOAT3 normal,
@@ -83,17 +84,26 @@ class Geometry {
     }
 
     void add_labyrinth_wall_x(float x, float z, float W) {
-        add_wall_x(x, wall_y_start, z + wall_thickness_half, W, wall_h, {0.0f, 0.0f,  1.0f});
-        add_wall_x(x, wall_y_start, z - wall_thickness_half, W, wall_h, {0.0f, 0.0f, -1.0f});
-        add_wall_z(x, wall_y_start, z - wall_thickness_half, 2 * wall_thickness_half, wall_h, {-1.0f, 0.0f, 0.0f});
-        add_wall_z(x + W, wall_y_start, z - wall_thickness_half, 2 * wall_thickness_half, wall_h, {1.0f, 0.0f, 0.0f});
+        add_wall_x(x - wall_thickness_half, wall_y_start, z + wall_thickness_half, W + 2 * wall_thickness_half, wall_h,
+                   {0.0f, 0.0f,  1.0f});
+        add_wall_x(x - wall_thickness_half, wall_y_start, z - wall_thickness_half, W + 2 * wall_thickness_half, wall_h,
+                   {0.0f, 0.0f, -1.0f});
+        add_wall_z(x - wall_thickness_half + eps, wall_y_start, z - wall_thickness_half, 2 * wall_thickness_half,
+                   wall_h,
+                   {-1.0f, 0.0f, 0.0f});
+        add_wall_z(x + W + wall_thickness_half - eps, wall_y_start, z - wall_thickness_half, 2 * wall_thickness_half,
+                   wall_h, {1.0f, 0.0f, 0.0f});
     }
 
     void add_labyrinth_wall_z(float x, float z, float W) {
-        add_wall_z(x + wall_thickness_half, wall_y_start, z, W, wall_h, { 1.0f, 0.0f, 0.0f});
-        add_wall_z(x - wall_thickness_half, wall_y_start, z, W, wall_h, {-1.0f, 0.0f, 0.0f});
-        add_wall_x(x - wall_thickness_half, wall_y_start, z, 2 * wall_thickness_half, wall_h, {0.0f, 0.0f, -1.0f});
-        add_wall_x(x - wall_thickness_half, wall_y_start, z + W, 2 * wall_thickness_half, wall_h, {0.0f, 0.0f, 1.0f});
+        add_wall_z(x + wall_thickness_half, wall_y_start, z - wall_thickness_half, W + 2 * wall_thickness_half, wall_h,
+                   { 1.0f, 0.0f, 0.0f});
+        add_wall_z(x - wall_thickness_half, wall_y_start, z - wall_thickness_half, W + 2 * wall_thickness_half, wall_h,
+                   {-1.0f, 0.0f, 0.0f});
+        add_wall_x(x - wall_thickness_half, wall_y_start, z - wall_thickness_half + eps, 2 * wall_thickness_half, wall_h,
+                   {0.0f, 0.0f, -1.0f});
+        add_wall_x(x - wall_thickness_half, wall_y_start, z + W + wall_thickness_half - eps, 2 * wall_thickness_half,
+                   wall_h, {0.0f, 0.0f, 1.0f});
     }
 
     void add_floor() {
