@@ -17,12 +17,12 @@ using Vertex = DXApp::Vertex;
 class Geometry {
     std::vector<Vertex> vertices;
 
-    float ref_h = 0.2f;
-    float ref_w = 0.2f;
-    float tex_h = 1.0f / 15.0f;
-    float tex_w = tex_h * 3200.0f / 2159.0f;
+    float ref_h = 4.0f;
+    float ref_w = 4.0f;
     float wall_h = 3.0f;
     float wall_y_start = -1.0f;
+    float tex_h = 1.0f * ref_h / wall_h;
+    float tex_w = tex_h * 3200.0f / 2159.0f;
     float wall_thickness_half = 0.1f;
 
     void add_rect_xy(float x, float y, float z, float w, float h,
@@ -50,8 +50,8 @@ class Geometry {
     }
 
     void add_wall_x(float x, float y, float z, float W, float H, DirectX::XMFLOAT3 normal) {
-        int steps_horizontal = (int) (W / ref_w);
-        int steps_vertical = (int) (H / ref_h);
+        int steps_horizontal = (int) (W / ref_w) + 1;
+        int steps_vertical = (int) (H / ref_h) + 1;
         float w = W / (float) steps_horizontal;
         float h = H / (float) steps_vertical;
 
@@ -65,8 +65,8 @@ class Geometry {
     }
 
     void add_wall_z(float x, float y, float z, float W, float H, DirectX::XMFLOAT3 normal) {
-        int steps_horizontal = (int) (W / ref_w);
-        int steps_vertical = (int) (H / ref_h);
+        int steps_horizontal = (int) (W / ref_w) + 1;
+        int steps_vertical = (int) (H / ref_h) + 1;
         float w = W / (float) steps_horizontal;
         float h = H / (float) steps_vertical;
 

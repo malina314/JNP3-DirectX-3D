@@ -39,27 +39,27 @@ PSInput main(float3 pos : POSITION,
             colLight * colMaterial);
 
     // Flashlight circle
-    float flashLightStrength = 2.0f;
-
-    float factor;
-
-    float distZ = abs(result.position.z);
-    float factorZ = max(1.0f - distZ * 0.03f, 0.0f);
-
-    float rx = 0.3f * distZ * 0.1f;
-    float2 radius = float2(rx, rx * 1.6667f);
-    float dist = ellipseDist(result.position.xy, float2(0.0f, 0.0f), radius);
-
-    if (dist < 1.0f) {
-        factor = 1.0f;
-    } else {
-        factor = max(1.0f - dist * 0.03f, 0.0f);
-    }
-
-    result.color *= factor * factorZ * flashLightStrength;
+//     float flashLightStrength = 2.0f;
+//
+//     float factor;
+//
+//     float distZ = abs(result.position.z);
+//     float factorZ = max(1.0f - distZ * 0.03f, 0.0f);
+//
+//     float rx = 0.3f * distZ * 0.1f;
+//     float2 radius = float2(rx, rx * 1.6667f);
+//     float dist = ellipseDist(result.position.xy, float2(0.0f, 0.0f), radius);
+//
+//     if (dist < 1.0f) {
+//         factor = 1.0f;
+//     } else {
+//         factor = max(1.0f - dist * 0.03f, 0.0f);
+//     }
+//
+//     result.color *= factor * factorZ * flashLightStrength;
 
     // Global light
-    result.color += float4(1.0f, 1.0f, 1.0f, 1.0f) * 0.2f;
+    result.color += float4(1.0f, 1.0f, 1.0f, 1.0f) * 0.3f;
 
     result.texCoord = texCoord;
 

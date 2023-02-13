@@ -144,6 +144,8 @@ void DXApp::LoadPipeline() {
 
 // Load the sample assets.
 void DXApp::LoadAssets() {
+    ComPtr<ID3D12Resource> vertexBufferUploadHeap;
+
     // Create the root signature.
     {
         D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
@@ -263,26 +265,73 @@ void DXApp::LoadAssets() {
         m_verticesCount = geometry.GetVerticesCount();
 
         {
-            auto tmp1 = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+            auto tmp1 = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
             auto tmp2 = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+            auto tmp3 = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 
             utils::ThrowIfFailed(m_device->CreateCommittedResource(
                     &tmp1,
                     D3D12_HEAP_FLAG_NONE,
                     &tmp2,
-                    D3D12_RESOURCE_STATE_GENERIC_READ,
+                    D3D12_RESOURCE_STATE_COPY_DEST,
                     nullptr,
                     IID_PPV_ARGS(&m_vertexBuffer)));
+
+            utils::ThrowIfFailed(m_device->CreateCommittedResource(
+                    &tmp3,
+                    D3D12_HEAP_FLAG_NONE,
+                    &tmp2,
+                    D3D12_RESOURCE_STATE_GENERIC_READ,
+                    nullptr,
+                    IID_PPV_ARGS(&vertexBufferUploadHeap)));
         }
 
-        // Copy the triangle data to the vertex buffer.
-        UINT8 *pVertexDataBegin;
-        CD3DX12_RANGE readRange(0, 0);
-        utils::ThrowIfFailed(m_vertexBuffer->Map(
-                0, &readRange, reinterpret_cast<void **>(&pVertexDataBegin))
+        NAME_D3D12_OBJECT(m_vertexBuffer);
+
+        // Copy data to the intermediate upload heap and then schedule a copy
+        // from the upload heap to the vertex buffer.
+        D3D12_SUBRESOURCE_DATA vertexData = {};
+        vertexData.pData = triangleVertices;
+        vertexData.RowPitch = vertexBufferSize;
+        vertexData.SlicePitch = vertexData.RowPitch;
+
+        UpdateSubresources<1>(
+                m_commandList.Get(), m_vertexBuffer.Get(),
+                vertexBufferUploadHeap.Get(), 0, 0, 1, &vertexData
         );
-        memcpy(pVertexDataBegin, triangleVertices, vertexBufferSize);
-        m_vertexBuffer->Unmap(0, nullptr);
+
+        {
+            auto tmp1 = CD3DX12_RESOURCE_BARRIER::Transition(
+                    m_vertexBuffer.Get(),
+                    D3D12_RESOURCE_STATE_COPY_DEST,
+                    D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+            );
+
+            m_commandList->ResourceBarrier(1, &tmp1);
+        }
+
+//         todo: remove
+//        {
+//            auto tmp1 = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+//            auto tmp2 = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+//
+//            utils::ThrowIfFailed(m_device->CreateCommittedResource(
+//                    &tmp1,
+//                    D3D12_HEAP_FLAG_NONE,
+//                    &tmp2,
+//                    D3D12_RESOURCE_STATE_GENERIC_READ,
+//                    nullptr,
+//                    IID_PPV_ARGS(&m_vertexBuffer)));
+//        }
+//
+//        // Copy the triangle data to the vertex buffer.
+//        UINT8 *pVertexDataBegin;
+//        CD3DX12_RANGE readRange(0, 0);
+//        utils::ThrowIfFailed(m_vertexBuffer->Map(
+//                0, &readRange, reinterpret_cast<void **>(&pVertexDataBegin))
+//        );
+//        memcpy(pVertexDataBegin, triangleVertices, vertexBufferSize);
+//        m_vertexBuffer->Unmap(0, nullptr);
 
         // Initialize the vertex buffer view.
         m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
