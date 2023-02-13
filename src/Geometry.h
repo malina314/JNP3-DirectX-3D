@@ -439,26 +439,38 @@ using Vertex = DXApp::Vertex;
 class Geometry {
     std::vector<Vertex> vertices;
 
-    void add_rect_xy(float x, float y, float z, float w, float h, DirectX::XMFLOAT3 normal) {
-        vertices.push_back({{x, y, z}, normal, {}, {}});
-        vertices.push_back({{x + w, y + h, z}, normal, {}, {}});
-        vertices.push_back({{x + w, y, z}, normal, {}, {}});
+    void add_rect_xy(float x, float y, float z, float w, float h,
+                     DirectX::XMFLOAT3 normal,
+                     float tex_x, float tex_y, float tex_w, float tex_h) {
+        vertices.push_back({{x, y, z}, normal, {}, {tex_x, tex_y}});
+        vertices.push_back({{x + w, y + h, z}, normal, {}, {tex_x + tex_w, tex_y - tex_h}});
+        vertices.push_back({{x + w, y, z}, normal, {}, {tex_x + tex_w, tex_y}});
 
-        vertices.push_back({{x, y + h, z}, normal, {}, {}});
-        vertices.push_back({{x + w, y + h, z}, normal, {}, {}});
-        vertices.push_back({{x, y, z}, normal, {}, {}});
+        vertices.push_back({{x, y + h, z}, normal, {}, {tex_x, tex_y - tex_h}});
+        vertices.push_back({{x + w, y + h, z}, normal, {}, {tex_x + tex_w, tex_y - tex_h}});
+        vertices.push_back({{x, y, z}, normal, {}, {tex_x, tex_y}});
     }
 
 public:
     Geometry() {
+        int steps_vertical = 25;
+        int steps_horizontal = 50;
         float w = 0.2f;
         float h = 0.2f;
+        float tex_w = 1.0f / (float) steps_horizontal;
+        float tex_h = 1.0f / (float) steps_vertical;
 
-        for (float i = 0.0f; i < 5.0f; i += h) {
-            for (float j = 0.0f; j < 10.0f; j += w) {
-                add_rect_xy(-8.0f + j, -3.0f + i, 8.0f, w, h, {0.0f, 0.0f, -1.0f});
+        for (int i = 0; i < steps_vertical; ++i) {
+            for (int j = 0; j < steps_horizontal; ++j) {
+                add_rect_xy(-8.0f + (float) j * w, -3.0f + (float) i * h, 8.0f, w, h,
+                            {0.0f, 0.0f, -1.0f},
+                            tex_w * (float) j, 1.0f - tex_h * (float) i, tex_w, tex_h);
             }
         }
+
+//        vertices.push_back({{-8.0f,  -3.0f, 7.0f},  NF,  {1.0f, 0.0f, 0.0f, 1.0f},  { -0.5f, 1.5f }}); // ld
+//        vertices.push_back({{-1.0f,  3.0f, 7.0f},   NF,  {1.0f, 0.0f, 0.0f, 1.0f},  { 1.5f, -0.5f }}); // pg
+//        vertices.push_back({{-1.0f,  -3.0f, 7.0f},  NF,  {1.0f, 0.0f, 0.0f, 1.0f},  { 1.5f, 1.5f }}); // pd
     }
 
     Vertex *GetVertices() {
