@@ -439,6 +439,11 @@ using Vertex = DXApp::Vertex;
 class Geometry {
     std::vector<Vertex> vertices;
 
+    float ref_h = 0.2f;
+    float ref_w = 0.2f;
+    float tex_h = 1.0f / 15.0f;
+    float tex_w = tex_h * 3200.0f / 2159.0f;
+
     void add_rect_xy(float x, float y, float z, float w, float h,
                      DirectX::XMFLOAT3 normal,
                      float tex_x, float tex_y, float tex_w, float tex_h) {
@@ -451,26 +456,54 @@ class Geometry {
         vertices.push_back({{x, y, z}, normal, {}, {tex_x, tex_y}});
     }
 
-public:
-    Geometry() {
-        int steps_vertical = 25;
-        int steps_horizontal = 50;
-        float w = 0.2f;
-        float h = 0.2f;
-        float tex_w = 1.0f / (float) steps_horizontal;
-        float tex_h = 1.0f / (float) steps_vertical;
+    void add_rect_yz(float x, float y, float z, float w, float h,
+                     DirectX::XMFLOAT3 normal,
+                     float tex_x, float tex_y, float tex_w, float tex_h) {
+        vertices.push_back({{x, y, z}, normal, {}, {tex_x, tex_y}});
+        vertices.push_back({{x, y + h, z + w}, normal, {}, {tex_x + tex_w, tex_y - tex_h}});
+        vertices.push_back({{x, y, z + w}, normal, {}, {tex_x + tex_w, tex_y}});
+
+        vertices.push_back({{x, y + h, z}, normal, {}, {tex_x, tex_y - tex_h}});
+        vertices.push_back({{x, y + h, z + w}, normal, {}, {tex_x + tex_w, tex_y - tex_h}});
+        vertices.push_back({{x, y, z}, normal, {}, {tex_x, tex_y}});
+    }
+
+    void add_wall_xy(float x, float y, float z, float W, float H, DirectX::XMFLOAT3 normal) {
+        int steps_horizontal = (int) (W / ref_w);
+        int steps_vertical = (int) (H / ref_h);
+        float w = W / (float) steps_horizontal;
+        float h = H / (float) steps_vertical;
 
         for (int i = 0; i < steps_vertical; ++i) {
             for (int j = 0; j < steps_horizontal; ++j) {
-                add_rect_xy(-8.0f + (float) j * w, -3.0f + (float) i * h, 8.0f, w, h,
-                            {0.0f, 0.0f, -1.0f},
+                add_rect_xy(x + (float) j * w, y + (float) i * h, z, w, h,
+                            normal,
                             tex_w * (float) j, 1.0f - tex_h * (float) i, tex_w, tex_h);
             }
         }
+    }
 
-//        vertices.push_back({{-8.0f,  -3.0f, 7.0f},  NF,  {1.0f, 0.0f, 0.0f, 1.0f},  { -0.5f, 1.5f }}); // ld
-//        vertices.push_back({{-1.0f,  3.0f, 7.0f},   NF,  {1.0f, 0.0f, 0.0f, 1.0f},  { 1.5f, -0.5f }}); // pg
-//        vertices.push_back({{-1.0f,  -3.0f, 7.0f},  NF,  {1.0f, 0.0f, 0.0f, 1.0f},  { 1.5f, 1.5f }}); // pd
+    void add_wall_yz(float x, float y, float z, float W, float H, DirectX::XMFLOAT3 normal) {
+        int steps_horizontal = (int) (W / ref_w);
+        int steps_vertical = (int) (H / ref_h);
+        float w = W / (float) steps_horizontal;
+        float h = H / (float) steps_vertical;
+
+        for (int i = 0; i < steps_vertical; ++i) {
+            for (int j = 0; j < steps_horizontal; ++j) {
+                add_rect_yz(x, y + (float) i * h, z + (float) j * w, w, h,
+                            normal,
+                            tex_w * (float) j, 1.0f - tex_h * (float) i, tex_w, tex_h);
+            }
+        }
+    }
+
+public:
+    Geometry() {
+        add_wall_xy(-8.0f, -1.0f, 8.0f, 16.0f, 3.0f, {0.0f, 0.0f, -1.0f});
+        add_wall_yz(8.0f, -1.0f, -8.0f, 16.0f, 3.0f, {-1.0f, 0.0f, 0.0f});
+        add_wall_xy(-8.0f, -1.0f, -8.0f, 16.0f, 3.0f, {0.0f, 0.0f, 1.0f});
+        add_wall_yz(-8.0f, -1.0f, -8.0f, 16.0f, 3.0f, {1.0f, 0.0f, 0.0f});
     }
 
     Vertex *GetVertices() {
